@@ -9,22 +9,21 @@ import (
 )
 
 var StudentsSchema = `CREATE TABLE IF NOT EXISTS students (
-								id		INTEGER PRIMARY KEY AUTOINCREMENT,
-							    name	TEXT,
-							    surname	TEXT
-								);`
-var selectStudents = `SELECT id, name, surname FROM students`
+	name	TEXT,
+	surname	TEXT
+	);`
+var selectStudents = `SELECT rowid, name, surname FROM students`
 var insertStudent = `INSERT INTO students (name, surname) VALUES(?,?)`
 var deleteAllStudents = `DELETE FROM students`
-var deleteStudentByID = `DELETE FROM students WHERE id IN (?)`
+var deleteStudentByID = `DELETE FROM students WHERE rowid IN (?)`
 
-type Student struct{ // UPPERCASE!!!
-	// Id int
-	Name    string `db:"name"`
-	Surname string `db:"surname"`
+type Student struct {
+	Rowid   int
+	Name    string
+	Surname string
 }
 
-type Storage struct{
+type Storage struct {
 	db *sqlx.DB
 }
 
@@ -45,11 +44,11 @@ func (storage *Storage) CreateTable(schema string) {
 	if err != nil {
 		log.Fatal("table creation failed. Query: ", schema, "\nError:", err)
 	}
-	if count, err := result.RowsAffected(); err != nil{
-		log.Fatal(count," rows affected.")
+	if count, err := result.RowsAffected(); err != nil {
+		log.Fatal(count, " rows affected.")
 	}
 }
-func (storage *Storage) Close(){ // To control flow in other files.
+func (storage *Storage) Close() { // To control flow in other files.
 	storage.db.Close()
 }
 func (storage *Storage) AddStudent(name, surname string) {
@@ -61,12 +60,12 @@ func (storage *Storage) AddStudent(name, surname string) {
 		log.Fatal(count, " rows affected.")
 	}
 }
-func (storage *Storage) GetStudents() (*[]Student){// Writes all the students from table to slice.
+func (storage *Storage) GetStudents() *[]Student { // Writes all the students from table to slice.
 
 	var students []Student
 
-	if err := storage.db.Select(&students, selectStudents); err != nil{
-		log.Fatal("querying 'students' table failed. Query: ", selectStudents,"\nError: ",  err)
+	if err := storage.db.Select(&students, selectStudents); err != nil {
+		log.Fatal("querying 'students' table failed. Query: ", selectStudents, "\nError: ", err)
 	}
 
 	return &students
@@ -76,8 +75,8 @@ func (storage *Storage) PrintStudents() {
 	students := storage.GetStudents()
 
 	// Printing:
-	for _,student := range *students{
-		fmt.Print(/*student.Id, ": ",*/ student.Name, " ", student.Surname, "\n")
+	for _, student := range *students {
+		fmt.Print(student.Rowid, ": ", student.Name, " ", student.Surname, "\n")
 	}
 }
 func (storage *Storage) DeleteAllStudents() {
@@ -97,6 +96,4 @@ func (storage *Storage) DeleteStudent(id int) {
 	if count, err := result.RowsAffected(); err != nil {
 		log.Fatal(count, " rows affected.")
 	}
-
-
 }

@@ -4,6 +4,7 @@ import(
 	"fake-klasse/storage"
 )
 
+
 func main() {
 	
 	storage := storage.Storage{}
