@@ -8,12 +8,13 @@ import (
 	"gioui.org/io/system"   // Events
 	"gioui.org/layout"      // Dimensions, constraints, directions, flexbox.
 	"gioui.org/op"
-	"gioui.org/unit"            // implements device independent units and values. e.g. dp - device independent pixel, sp - scaled pixel - used for text sizes. and more.
+	"gioui.org/unit" // implements device independent units and values. e.g. dp - device independent pixel, sp - scaled pixel - used for text sizes. and more.
+
 	//"gioui.org/widget"          // UI component state tracking and event handling: Is the mouse hovering over the button? Is button pressed, and how many times?
 	"gioui.org/widget/material" // theme
 
-	"fake-klasse/ui"
 	"fake-klasse/storage"
+	"fake-klasse/ui"
 )
 
 func main() {
@@ -38,7 +39,7 @@ func mainLoop(window *app.Window) error {
 	storage := storage.Storage{}
 	storage.Init("School.db")
 	defer storage.Close()
-	
+
 	// Filling DB:
 	//storage.DeleteAllStudents()
 	storage.AddStudent("Babaja", "Papaja")
@@ -60,7 +61,7 @@ func mainLoop(window *app.Window) error {
 
 			// Drawing here:
 			currentLayout(graphicalContext)
-			
+
 			event.Frame(graphicalContext.Ops)
 
 		case system.DestroyEvent: // Sent when the app is closed.

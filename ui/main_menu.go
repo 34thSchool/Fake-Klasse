@@ -3,17 +3,17 @@ package ui
 
 import (
 	"gioui.org/layout"
+	"gioui.org/op"
 	"gioui.org/widget"
 	"gioui.org/widget/material"
-	"gioui.org/op"
 )
 
 func MainMenu(theme *material.Theme, operations *op.Ops) func(graphicalContext layout.Context) {
 
 	// Widget declaration:
-	var(
+	var (
 		studentsButton widget.Clickable
-		quit widget.Clickable
+		quit           widget.Clickable
 	)
 
 	// Widget drawing:
@@ -24,7 +24,7 @@ func MainMenu(theme *material.Theme, operations *op.Ops) func(graphicalContext l
 
 		// Flexbox with Top alignment:
 		layout.Flex{
-			Axis: 	 layout.Vertical,
+			Axis:    layout.Vertical,
 			Spacing: layout.SpaceEnd, // Top
 		}.Layout(graphicalContext,
 			layout.Rigid(
@@ -34,7 +34,7 @@ func MainMenu(theme *material.Theme, operations *op.Ops) func(graphicalContext l
 
 		// Flexbox with Middle alignment:
 		layout.Flex{
-			Axis: layout.Vertical,
+			Axis:    layout.Vertical,
 			Spacing: layout.SpaceAround, // Middle
 		}.Layout(graphicalContext,
 			layout.Rigid(
@@ -50,7 +50,6 @@ func MainMenu(theme *material.Theme, operations *op.Ops) func(graphicalContext l
 			layout.Rigid(
 				DrawButtonWithMargins(theme, &quit, "Quit", 15, Rect{200, 200, 0, 75}, buttonColor),
 			),
-			
 		)
 
 	}
