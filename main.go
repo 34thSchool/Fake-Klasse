@@ -13,8 +13,8 @@ import (
 	//"gioui.org/widget"          // UI component state tracking and event handling: Is the mouse hovering over the button? Is button pressed, and how many times?
 	"gioui.org/widget/material" // theme
 
+	"fake-klasse/layouts"
 	"fake-klasse/storage"
-	"fake-klasse/ui"
 )
 
 func main() {
@@ -37,22 +37,23 @@ func mainLoop(window *app.Window) error {
 
 	// Initializing DB:
 	storage := storage.Storage{}
-	storage.Init("School.db")
+	storage.Init("school.db")
 	defer storage.Close()
 
 	// Filling DB:
 	//storage.DeleteAllStudents()
-	storage.AddStudent("Babaja", "Papaja")
-	storage.AddStudent("Mambo", "Kurkuda")
-	storage.AddStudent("Džuz", "Zeba")
-	storage.AddStudent("Keto", "Vavai")
+	// storage.AddStudent("Babaja", "Papaja")
+	// storage.AddStudent("Mambo", "Kurkuda")
+	// storage.AddStudent("Džuz", "Zeba")
+	// storage.AddStudent("Keto", "Vavai")
 
 	// Rendering:
 	var operations op.Ops
 	theme := material.NewTheme(gofont.Collection())
 
-	//currentLayout := ui.MainMenu(theme, &operations)// Declarating widgets and passing the drawing function as currentLayout. We're NOT drawing.
-	currentLayout := ui.Students(theme, &operations, &storage)
+	var shouldQuit bool = false
+	currentLayout := layouts.MainMenu(theme, &operations, &shouldQuit, &storage) // Declarating widgets and passing the drawing function as currentLayout. We're NOT drawing.
+	//currentLayout := layouts.Students(theme, &operations, &storage)
 
 	for event := range window.Events() {
 		switch event := event.(type) {
@@ -60,7 +61,17 @@ func mainLoop(window *app.Window) error {
 			graphicalContext := layout.NewContext(&operations, event)
 
 			// Drawing here:
-			currentLayout(graphicalContext)
+
+			nextLayout, drawLayout := currentLayout(graphicalContext)
+			drawLayout(graphicalContext)
+			if nextLayout != nil {
+				currentLayout = nextLayout
+			}
+
+			// Checking whether or not we should quit:
+			if shouldQuit {
+				window.Perform(system.ActionClose)
+			}
 
 			event.Frame(graphicalContext.Ops)
 
