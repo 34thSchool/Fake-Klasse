@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"image"
 	"image/color"
+	"strings"
 
 	"gioui.org/layout"
 	"gioui.org/op"
@@ -18,31 +19,35 @@ import (
 	"fake-klasse/storage"
 )
 
+// Strange (recursive?) data type macro:
+type Screen func(gtx layout.Context) (Screen, func(graphicalContext layout.Context))
+
 // Color literals:
 var(
-	buttonColor = color.NRGBA{64, 64, 64, 255}//light grey
-	titleColor = color.NRGBA{55, 55, 55, 255}//dark grey
-	backgroundColor = color.NRGBA{25, 25, 25, 255}//black
-	textColor = color.NRGBA{255,255,255,255}//white
-	lightListColor = color.NRGBA{75, 75, 75, 255}// light grey for list widget elements
-	darkListColor = color.NRGBA{65, 65, 65, 255}// dark grey for list widget elements
+	ButtonColor = color.NRGBA{64, 64, 64, 255}//light grey
+	TitleColor = color.NRGBA{55, 55, 55, 255}//dark grey
+	BackgroundColor = color.NRGBA{25, 25, 25, 255}//black
+	TextColor = color.NRGBA{255,255,255,255}//white
+	LightListColor = color.NRGBA{75, 75, 75, 255}// light grey for list widget elements
+	DarkListColor = color.NRGBA{65, 65, 65, 255}// dark grey for list widget elements
+	HintColor = color.NRGBA{150, 150, 150, 255}// grey
 )
 
 //Margin dimentions
 type Rect struct { // To define margins more conviently.
-	left, right, top, bottom float32
+	Left, Right, Top, Bottom float32
 }
+
 
 //Buttons:
 func DrawButtonWithMargins(theme *material.Theme, button *widget.Clickable, text string, textSize float32, r Rect, c color.NRGBA) func(graphicalContext layout.Context) layout.Dimensions {
 
 	return func(graphicalContext layout.Context) layout.Dimensions {
 		margins := layout.Inset{
-			// UniformInset() sets all the sides to one value.
-			Top:    unit.Dp(r.top),
-			Bottom: unit.Dp(r.bottom),
-			Left:   unit.Dp(r.left),
-			Right:  unit.Dp(r.right),
+			Top:    unit.Dp(r.Top),
+			Bottom: unit.Dp(r.Bottom),
+			Left:   unit.Dp(r.Left),
+			Right:  unit.Dp(r.Right),
 		}
 		return margins.Layout(graphicalContext,
 			DrawButton(theme, button, text, textSize, c),
@@ -56,6 +61,18 @@ func DrawButton(theme *material.Theme, button *widget.Clickable, text string, te
 		button.Background = c
 		button.TextSize = unit.Dp(textSize)
 		return button.Layout(graphicalContext) // returns dimensions
+	}
+}
+
+// Greyes out a button:
+func InputCheck (w layout.Widget, firstInput, secondInput widget.Editor) layout.Widget {
+	return func(gtx layout.Context) layout.Dimensions {
+		firstInput := strings.TrimSpace(firstInput.Text())
+		secondInput := strings.TrimSpace(secondInput.Text())
+		if firstInput == "" || secondInput == "" { 
+			gtx = gtx.Disabled()//If one of them is empty than the button is disabled.
+		}
+		return w(gtx)
 	}
 }
 
@@ -73,7 +90,7 @@ func DrawTitle(theme *material.Theme, operations *op.Ops, rectangleHeight float3
 		title := material.Label(theme, unit.Dp(40), titleText)
 		title.Alignment = text.Middle
 		title.Color = color.NRGBA{R: 255, G: 255, B: 255, A: 255}
-		return layout.Inset{Right: unit.Dp(r.right), Left: unit.Dp(r.left), Top: unit.Dp(r.top), Bottom: unit.Dp(r.bottom)}.Layout(graphics_context, title.Layout)
+		return layout.Inset{Right: unit.Dp(r.Right), Left: unit.Dp(r.Left), Top: unit.Dp(r.Top), Bottom: unit.Dp(r.Bottom)}.Layout(graphics_context, title.Layout)
 	}
 }
 func DrawBackground(operations *op.Ops, c color.NRGBA) func(graphicalContext layout.Context) layout.Dimensions{
@@ -81,15 +98,16 @@ func DrawBackground(operations *op.Ops, c color.NRGBA) func(graphicalContext lay
 	 return nil
 }
 
+
 // List:
 func DrawListWithMargins(graphicalContext layout.Context, theme *material.Theme, buttons *[]widget.Clickable, students *[]storage.Student, list *widget.List, r Rect) func(graphicalContext layout.Context) layout.Dimensions {
 
 	return func(graphicalContext layout.Context) layout.Dimensions {
 		margins := layout.Inset{
-			Top:    unit.Dp(r.top),
-			Bottom: unit.Dp(r.bottom),
-			Left:   unit.Dp(r.left),
-			Right:  unit.Dp(r.right),
+			Top:    unit.Dp(r.Top),
+			Bottom: unit.Dp(r.Bottom),
+			Left:   unit.Dp(r.Left),
+			Right:  unit.Dp(r.Right),
 		}
 		return margins.Layout(graphicalContext,
 			DrawList(graphicalContext, theme, buttons, students, list),
@@ -111,9 +129,9 @@ func DrawListElement(graphicalContext layout.Context, theme *material.Theme, but
 
 	var color color.NRGBA
 	if index%2 == 0 {
-		color = darkListColor
+		color = DarkListColor
 	} else {
-		color = lightListColor
+		color = LightListColor
 	}
 
 	return DrawButton(theme, button, fmt.Sprintf("%s %s", student.Name, student.Surname), 15, color)(graphicalContext)
@@ -123,12 +141,39 @@ func DrawListWidget(graphicalContext layout.Context, index int) func (graphicalC
 	return func (graphicalContext layout.Context) layout.Dimensions{
 		var color color.NRGBA
 		if index%2 == 0 {
-			color = darkListColor
+			color = DarkListColor
 		} else {
-			color = lightListColor
+			color = LightListColor
 		}
 		max := image.Pt(graphicalContext.Constraints.Max.X, graphicalContext.Constraints.Min.Y)
 		paint.FillShape(graphicalContext.Ops, color, clip.Rect{Max: max}.Op())
 		return layout.Dimensions{Size: graphicalContext.Constraints.Min}
 		}
+}
+
+
+//Input:
+func DrawInput(theme *material.Theme, input *widget.Editor, hint string, textSize float32) func(graphicalContext layout.Context) layout.Dimensions {
+
+	return func(graphicalContext layout.Context) layout.Dimensions {
+		input := material.Editor(theme, input, hint)
+		input.TextSize = unit.Dp(textSize)
+		input.HintColor = HintColor
+		input.Color = TextColor
+		input.SelectionColor = LightListColor//very useful thing ._.
+		return input.Layout(graphicalContext)
+	}
+}
+func DrawInputWithMargins(theme *material.Theme, input *widget.Editor, hint string, textSize float32, r Rect) func(graphicalContext layout.Context) layout.Dimensions{
+	return func(graphicalContext layout.Context) layout.Dimensions{
+		margins := layout.Inset{
+			Top:    unit.Dp(r.Top),
+			Bottom: unit.Dp(r.Bottom),
+			Left:   unit.Dp(r.Left),
+			Right:  unit.Dp(r.Right),
+		}
+	return margins.Layout(graphicalContext,
+		DrawInput(theme, input, hint, textSize),
+	)
+	}
 }
