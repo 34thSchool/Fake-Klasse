@@ -27,6 +27,8 @@ type Storage struct {
 	db *sqlx.DB
 }
 
+var Singleton *Storage = &Storage{}// Singleton
+
 func (storage *Storage) Init(path string) {
 	// Creating and/or opening DB:
 	db, err := sqlx.Open("sqlite", path)
@@ -97,3 +99,4 @@ func (storage *Storage) DeleteStudent(id int) {
 		log.Fatal(count, " rows affected.")
 	}
 }
+

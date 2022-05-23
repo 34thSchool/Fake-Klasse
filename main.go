@@ -3,19 +3,17 @@ package main
 import (
 	"os"
 
-	"gioui.org/app"         // Window handling.
-	"gioui.org/font/gofont" // Special gioui font.
-	"gioui.org/io/system"   // Events
-	"gioui.org/layout"      // Dimensions, constraints, directions, flexbox.
+	"gioui.org/app"       // Window handling.
+	"gioui.org/io/system" // Events
+	"gioui.org/layout"    // Dimensions, constraints, directions, flexbox.
 	"gioui.org/op"
 	"gioui.org/unit" // implements device independent units and values. e.g. dp - device independent pixel, sp - scaled pixel - used for text sizes. and more.
 
 	//"gioui.org/widget"          // UI component state tracking and event handling: Is the mouse hovering over the button? Is button pressed, and how many times?
-	"gioui.org/widget/material" // theme
 
 	"fake-klasse/layouts"
+	"fake-klasse/state"
 	"fake-klasse/storage"
-	"fake-klasse/layouts"
 )
 
 func main() {
@@ -36,34 +34,28 @@ func main() {
 func mainLoop(window *app.Window) error {
 
 	// Initializing DB:
-	storage := storage.Storage{}
-	storage.Init("school.db")
-	defer storage.Close()
+	storage.Singleton.Init("school.db")
+	defer storage.Singleton.Close()
 
-	//storage.DeleteStudent(1)
-
-	// Rendering:
-	var operations op.Ops
-	theme := material.NewTheme(gofont.Collection())
 	
-	var shouldQuit bool = false
-	currentLayout := layouts.MainMenu(theme, &operations, &shouldQuit, &storage)// Declarating widgets and passing the drawing function as currentLayout. We're NOT drawing.
+
+	currentLayout := layouts.MainMenu() // Declarating widgets and passing the drawing function as currentLayout. We're NOT drawing.
 	//currentLayout := layouts.Students(theme, &operations, &storage)
 
 	for event := range window.Events() {
 		switch event := event.(type) {
 		case system.FrameEvent:
-			graphicalContext := layout.NewContext(&operations, event)
+			graphicalContext := layout.NewContext(&op.Ops{}, event)
 
 			// Drawing here:
 			nextLayout, drawLayout := currentLayout(graphicalContext)
 			drawLayout(graphicalContext)
-			if nextLayout != nil{
+			if nextLayout != nil {
 				currentLayout = nextLayout
 			}
 
 			// Checking whether or not we should quit:
-			if shouldQuit{
+			if state.ShouldQuit {
 				window.Perform(system.ActionClose)
 			}
 
@@ -76,4 +68,3 @@ func mainLoop(window *app.Window) error {
 
 	return nil
 }
-
