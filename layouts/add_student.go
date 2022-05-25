@@ -42,7 +42,6 @@ func Add_Student() ui.Screen {
 		layout := func(graphicalContext layout.Context) {
 			// Drawing background:
 			ui.DrawBackground(graphicalContext.Ops, ui.BackgroundColor)
-
 			// Flexbox with Top alignment:
 			layout.Flex{
 				Axis:    layout.Vertical,

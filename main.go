@@ -37,8 +37,6 @@ func mainLoop(window *app.Window) error {
 	storage.Singleton.Init("school.db")
 	defer storage.Singleton.Close()
 
-	
-
 	currentLayout := layouts.MainMenu() // Declarating widgets and passing the drawing function as currentLayout. We're NOT drawing.
 	//currentLayout := layouts.Students(theme, &operations, &storage)
 
