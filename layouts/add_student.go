@@ -6,34 +6,43 @@ import (
 	"strings"
 
 	"gioui.org/layout"
-	"gioui.org/op"
 	"gioui.org/widget"
-	"gioui.org/widget/material"
 )
 
-func Add_Student(theme *material.Theme, operations *op.Ops, storage *storage.Storage, shouldQuit *bool) ui.Screen {
+func Add_Student() ui.Screen {
 
 	// Widget declaration:
 	var (
-<<<<<<< HEAD
 		nameWidget    widget.Editor
 		surnameWidget widget.Editor
-=======
-		nameInput    widget.Editor
-		surnameInput widget.Editor
->>>>>>> 7b9a823e9c36526339b028d2ba351d712a94bdad
+
+		classButton     widget.Clickable
+		classButtonText string
+		selectedClass   string //string = "Class"
+		drawClassList   bool
+		classList       widget.List = widget.List{List: layout.List{Axis: layout.Vertical}}
 
 		saveButton  widget.Clickable
 		closeButton widget.Clickable
 	)
+
+	classButtonText = "Class" //for button to be with class text from the start
+
+	//Creating a widget.Clickable slice of all classes in DB
+	//classes := storage.Singleton.GetAllClasses()
+	var widgetList []widget.Clickable
+	for range *storage.Singleton.GetAllClasses() {
+		var widget widget.Clickable
+		widgetList = append(widgetList, widget)
+	}
 
 	//Widget drawing:
 	return func(graphicalContext layout.Context) (ui.Screen, func(graphicalContext layout.Context)) {
 
 		layout := func(graphicalContext layout.Context) {
 			// Drawing background:
-			ui.DrawBackground(operations, ui.BackgroundColor)
-			
+			ui.DrawBackground(graphicalContext.Ops, ui.BackgroundColor)
+
 			// Flexbox with Top alignment:
 			layout.Flex{
 				Axis:    layout.Vertical,
@@ -41,73 +50,89 @@ func Add_Student(theme *material.Theme, operations *op.Ops, storage *storage.Sto
 			}.Layout(graphicalContext,
 				// Title:
 				layout.Rigid(
-					ui.DrawTitle(theme, operations, 70, "Add Student", ui.TitleColor, ui.Rect{Right: 0, Left: 0, Top: 0, Bottom: 0}),
+					ui.DrawTitle(70, "Add Student", ui.TitleColor, ui.Rect{Right: 0, Left: 0, Top: 0, Bottom: 0}),
 				),
 			)
-		
+
 			//Horizontal Middle Flexbox
 			layout.Flex{
 				Axis:    layout.Horizontal,
 				Spacing: layout.SpaceAround,
 			}.Layout(graphicalContext,
-<<<<<<< HEAD
-				layout.Flexed(1,ui.DrawInputWithMargins(theme, &nameWidget, "Name", 25, ui.Rect{Right: 0, Left: 50, Top: 150, Bottom: 0})),
-				layout.Flexed(1,ui.DrawInputWithMargins(theme, &surnameWidget, "Surname", 25, ui.Rect{Right: 50, Left: 25, Top: 150, Bottom: 0})),
-=======
-				layout.Flexed(1,ui.DrawInputWithMargins(theme, &nameInput, "Name", 25, ui.Rect{Right: 0, Left: 50, Top: 150, Bottom: 0})),
-				layout.Flexed(1,ui.DrawInputWithMargins(theme, &surnameInput, "Surname", 25, ui.Rect{Right: 50, Left: 25, Top: 150, Bottom: 0})),
->>>>>>> 7b9a823e9c36526339b028d2ba351d712a94bdad
+				layout.Flexed(1, ui.DrawInputWithMargins(&nameWidget, "Name", 25, ui.Rect{Right: 0, Left: 50, Top: 150, Bottom: 0})),
+				layout.Flexed(1, ui.DrawInputWithMargins(&surnameWidget, "Surname", 25, ui.Rect{Right: 50, Left: 25, Top: 150, Bottom: 0})),
 			)
-		
+
+			layout.Flex{
+				Axis:    layout.Vertical,
+				Spacing: layout.SpaceEnd, //space sides
+			}.Layout(graphicalContext,
+				layout.Rigid(
+					ui.DrawButtonWithMargins(&classButton, classButtonText, 20, ui.Rect{Right: 175, Left: 175, Top: 230, Bottom: 0}, ui.ClassButtonColor),
+				),
+			)
+
 			// Flexbox with Bottom alignment:
 			layout.Flex{
 				Axis:    layout.Vertical,
 				Spacing: layout.SpaceStart, // Bottom
 			}.Layout(graphicalContext,
-			
-<<<<<<< HEAD
+
 				// Save button:
 				layout.Rigid(
 					ui.InputCheck(
-						ui.DrawButtonWithMargins(theme, &saveButton, "Save", 15, ui.Rect{Right: 175,Left: 175,Top: 0, Bottom: 25}, ui.ButtonColor),
-						nameWidget, surnameWidget,
-=======
-				// Add Student button:
-				layout.Rigid(
-					ui.InputCheck(
-						ui.DrawButtonWithMargins(theme, &saveButton, "Save", 15, ui.Rect{Right: 175,Left: 175,Top: 0, Bottom: 25}, ui.ButtonColor),
-						nameInput, surnameInput,
->>>>>>> 7b9a823e9c36526339b028d2ba351d712a94bdad
+						ui.DrawButtonWithMargins(&saveButton, "Save", 15, ui.Rect{Right: 175, Left: 175, Top: 0, Bottom: 25}, ui.ButtonColor),
+						nameWidget, surnameWidget, /* selectedClass.Name,*/
 					),
 				),
 				// Close button:
 				layout.Rigid(
-					ui.DrawButtonWithMargins(theme, &closeButton, "Close", 15, ui.Rect{Right: 200,Left: 200,Top: 0, Bottom: 35}, ui.ButtonColor),
+					ui.DrawButtonWithMargins(&closeButton, "Close", 15, ui.Rect{Right: 200, Left: 200, Top: 0, Bottom: 35}, ui.ButtonColor),
 				),
 			)
+
+			if drawClassList {
+				layout.Flex{
+					Axis:    layout.Vertical,
+					Spacing: layout.SpaceEnd, //around evently sides
+				}.Layout(graphicalContext,
+					layout.Rigid(
+						ui.DrawClassListWithMargins(graphicalContext, &widgetList, storage.Singleton.GetAllClasses(), &classList, ui.Rect{Right: 200, Left: 210, Top: 270, Bottom: 0}),
+					),
+				)
+			}
+
 		}
 
 		// Event handling:
-		if closeButton.Clicked(){
-			return Students(theme, operations, storage, shouldQuit), layout
+		if closeButton.Clicked() {
+			return Students(), layout
 		}
-		if saveButton.Clicked(){
-			storage.AddStudent(
-<<<<<<< HEAD
+		if saveButton.Clicked() {
+			storage.Singleton.AddStudent(
 				strings.TrimSpace(nameWidget.Text()),
 				strings.TrimSpace(surnameWidget.Text()),
-=======
-				strings.TrimSpace(nameInput.Text()),
-				strings.TrimSpace(surnameInput.Text()),
->>>>>>> 7b9a823e9c36526339b028d2ba351d712a94bdad
+				selectedClass,
 			)
-			return Students(theme, operations, storage, shouldQuit), layout
+			return Students(), layout
+		}
+		if classButton.Clicked() {
+			if drawClassList {
+				drawClassList = false
+			} else {
+				drawClassList = true
+			}
+		}
+		for index := range widgetList {
+			if widgetList[index].Clicked() {
+				drawClassList = false
+				selectedClass = (*storage.Singleton.GetAllClasses())[index].Name //change the text of the classButton
+				classButtonText = selectedClass
+			}
 		}
 
-		return nil,layout
+		return nil, layout
 
 	}
 
 }
-
-

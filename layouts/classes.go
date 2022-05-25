@@ -1,4 +1,4 @@
-//the file with student list layout drawing
+//the file with a list of classes drawing
 package layouts
 
 import (
@@ -9,21 +9,23 @@ import (
 	"gioui.org/widget"
 )
 
-func Students() ui.Screen {
+func Classes() ui.Screen {
 
 	// Widget declaration:
 	var (
-		addStudentButton widget.Clickable
+		addClassButton widget.Clickable
 		closeButton      widget.Clickable
 		list             widget.List = widget.List{List: layout.List{Axis: layout.Vertical}}
 	)
-	//Creating a widget.Clickable slice of all students in DB
-	students := storage.Singleton.GetAllStudents()
+	//Creating a widget.Clickable slice of all classes in DB
+	classes := storage.Singleton.GetAllClasses()
 	var widgetList []widget.Clickable
-	for range *students {
+
+	for range *classes {
 		var widget widget.Clickable
 		widgetList = append(widgetList, widget)
 	}
+	
 
 	return func(graphicalContext layout.Context) (ui.Screen, func(graphicalContext layout.Context)) {
 		// Rendering:
@@ -39,11 +41,11 @@ func Students() ui.Screen {
 			}.Layout(graphicalContext,
 				// Title:
 				layout.Rigid(
-					ui.DrawTitle(70, "Students", ui.TitleColor, ui.Rect{Right: 0, Left: 0, Top: 0, Bottom: 0}),
+					ui.DrawTitle(70, "Classes", ui.TitleColor, ui.Rect{Right: 0, Left: 0, Top: 0, Bottom: 0}),
 				),
 				// List:
 				layout.Rigid(
-					ui.DrawStudentListWithMargins(graphicalContext, &widgetList, storage.Singleton.GetAllStudents(), &list, ui.Rect{Right: 0, Left: 0, Top: 0, Bottom: 175}),
+					ui.DrawClassListWithMargins(graphicalContext, &widgetList, storage.Singleton.GetAllClasses(), &list, ui.Rect{Right: 0, Left: 0, Top: 0, Bottom: 175}),//Change on GetClasses() 
 				),
 			)
 
@@ -55,7 +57,7 @@ func Students() ui.Screen {
 
 				// Add Student button:
 				layout.Rigid(
-					ui.DrawButtonWithMargins(&addStudentButton, "Add Student", 15, ui.Rect{Right: 175, Left: 175, Top: 0, Bottom: 25}, ui.ButtonColor),
+					ui.DrawButtonWithMargins(&addClassButton, "Add Class", 15, ui.Rect{Right: 175, Left: 175, Top: 0, Bottom: 25}, ui.ButtonColor),
 				),
 				// Close button:
 				layout.Rigid(
@@ -67,12 +69,12 @@ func Students() ui.Screen {
 		if closeButton.Clicked() {
 			return MainMenu(), layout
 		}
-		if addStudentButton.Clicked() {
-			return Add_Student(), layout
+		if addClassButton.Clicked() {
+			return Add_Class(), layout
 		}
-		for index := range widgetList {
+		for index := range widgetList { //iterating through all list buttons and checking if they are clicked
 			if widgetList[index].Clicked() {
-				return Edit_Student(index, Students()), layout
+				return Class_Students(index), layout
 			}
 		}
 		return nil, layout
