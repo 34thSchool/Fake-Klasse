@@ -75,7 +75,7 @@ func Edit_Class(index int) ui.Screen {
 		}
 		if saveButton.Clicked() {
 
-			storage.Singleton.UpdateStudentClass((*storage.Singleton.GetAllClasses())[index].Name, strings.TrimSpace(classWidget.Text()))
+			storage.Singleton.UpdateAllClassStudentsClass((*storage.Singleton.GetAllClasses())[index].Name, strings.TrimSpace(classWidget.Text()))
 
 			storage.Singleton.DeleteClass((*storage.Singleton.GetAllClasses())[index])
 
@@ -87,7 +87,7 @@ func Edit_Class(index int) ui.Screen {
 		}
 		if deleteClassButton.Clicked() {
 
-			storage.Singleton.UpdateStudentClass((*storage.Singleton.GetAllClasses())[index].Name, "")
+			storage.Singleton.UpdateAllClassStudentsClass((*storage.Singleton.GetAllClasses())[index].Name, "")
 			storage.Singleton.DeleteClass((*storage.Singleton.GetAllClasses())[index])
 			className = ""
 

@@ -8,10 +8,11 @@ import (
 	_ "modernc.org/sqlite"
 )
 
+
 // Queries:
 // Students:
 var studentsSchema = `CREATE TABLE IF NOT EXISTS students (name TEXT, surname TEXT, class TEXT, 
-														FOREIGN KEY ("class") REFERENCES "classes"("name"));`
+					FOREIGN KEY ("class") REFERENCES "classes"("name"));`
 var selectStudents = `SELECT rowid, name, surname, class FROM students`
 var insertStudent = `INSERT INTO students (name, surname, class) VALUES(?, ?, ?)`
 var deleteAllStudents = `DELETE FROM students`
@@ -29,6 +30,9 @@ var linkClassToStudent = `SELECT name FROM classes INNER JOIN students ON classe
 type Storage struct {
 	db *sqlx.DB
 }
+	
+// Shortcut for accessing singleton:
+var S = Singleton
 
 var Singleton *Storage = &Storage{} // Singleton
 func (storage *Storage) Init(path string) {
@@ -174,27 +178,48 @@ func (storage *Storage) DeleteStudent(id int) {
 		log.Fatal(count, " rows affected.")
 	}
 }
-func (storage *Storage) UpdateStudentClass(prevClassName, newClassName string) {
+// All students:
+func (storage *Storage) UpdateAllClassStudentsClass(prevClassName, newClassName string) {
 	update := `UPDATE students SET class = (?) WHERE class = (?)`
 	_, err := storage.db.Exec(update, newClassName, prevClassName)
 	if err != nil {
 		log.Fatal("student update failed. Query: ", update, "\nError:", err)
 	}
-	// if count, err := result.RowsAffected(); err != nil {
-	// 	log.Fatal(count, " rows affected.")
-	// }
+}
+// Single student:
+func (storage *Storage) updateStudentClass(student Student, newClassName string){
+	update := `UPDATE students SET class = (?) WHERE rowid = (?)`
+	_, err := storage.db.Exec(update, newClassName, student.Rowid)
+	if err != nil {
+		log.Fatal("student update failed. Query: ", update, "\nError:", err)
+	}
+}
+func (storage *Storage) updateStudentName(student Student, newName string){
+	update := `UPDATE students SET name = (?) WHERE rowid = (?)`
+	_, err := storage.db.Exec(update, newName, student.Rowid)
+	if err != nil {
+		log.Fatal("student update failed. Query: ", update, "\nError:", err)
+	}
+}
+func (storage *Storage) updateStudentSurname(student Student, newSurname string){
+	update := `UPDATE students SET surname = (?) WHERE rowid = (?)`
+	_, err := storage.db.Exec(update, newSurname, student.Rowid)
+	if err != nil {
+		log.Fatal("student update failed. Query: ", update, "\nError:", err)
+	}
+}
+func (storage *Storage) UpdateStudent(prevStudent Student, newStudent Student){
+	if newStudent.Name != ""{
+		storage.updateStudentName(prevStudent, newStudent.Name)
+	}
+	if newStudent.Surname != ""{
+		storage.updateStudentSurname(prevStudent, newStudent.Surname)
+	}
+	if newStudent.Class != ""{
+		storage.updateStudentClass(prevStudent, newStudent.Class)
+	}
 }
 
-// func (storage *Storage) WipeStudentClass(prevClassName string){
-// 	update := `UPDATE students SET class = NUL WHERE class = (?)`
-// 	result, err := storage.db.Exec(update, prevClassName)
-// 	if err != nil {
-// 		log.Fatal("student update failed. Query: ", update, "\nError:", err)
-// 	}
-// 	if count, err := result.RowsAffected(); err != nil {
-// 		log.Fatal(count, " rows affected.")
-// 	}
-// }
 // Class:
 type Class struct {
 	Rowid int
@@ -234,7 +259,7 @@ func (storage *Storage) DeleteClass(class Class) {
 	// Annulating class field for all the students from this class:
 	//storage.UpdateStudentClass(class.Name, "")//decided not to do it here
 
-	//storage.Singleton.UpdateStudentClass((*storage.Singleton.GetAllClasses())[id].Name, "")
+	//storage.S.UpdateStudentClass((*storage.S.GetAllClasses())[id].Name, "")
 }
 func (storage *Storage) GetAllClasses() *[]Class {
 	var classes []Class

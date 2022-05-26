@@ -30,6 +30,9 @@ func Edit_Student(id int, returnLayout ui.Screen) ui.Screen {
 	students := storage.Singleton.GetAllStudents()
 
 	selectedClass = (*students)[id].Class
+	if selectedClass == ""{
+		selectedClass = "Class"
+	}
 
 	//Creating a widget.Clickable slice of all classes in classes table
 	var widgetList []widget.Clickable
@@ -117,12 +120,13 @@ func Edit_Student(id int, returnLayout ui.Screen) ui.Screen {
 			return returnLayout, layout
 		}
 		if saveButton.Clicked() {
-			storage.Singleton.DeleteStudent((*students)[id].Rowid)
-			storage.Singleton.AddStudent(
-				ui.DataCheck((*students)[id].Name, strings.TrimSpace(nameWidget.Text())),
-				ui.DataCheck((*students)[id].Surname, strings.TrimSpace(surnameWidget.Text())),
-				ui.DataCheck((*students)[id].Class, selectedClass),
-			)
+			// storage.Singleton.DeleteStudent((*students)[id].Rowid)
+			// storage.Singleton.AddStudent(
+			// 	ui.DataCheck((*students)[id].Name, strings.TrimSpace(nameWidget.Text())),
+			// 	ui.DataCheck((*students)[id].Surname, strings.TrimSpace(surnameWidget.Text())),
+			// 	ui.DataCheck((*students)[id].Class, selectedClass),
+			// )
+			storage.S.UpdateStudent((*students)[id], storage.Student{Name: strings.TrimSpace(nameWidget.Text()), Surname: strings.TrimSpace(surnameWidget.Text()), Class: selectedClass})
 
 			return returnLayout, layout
 		}
