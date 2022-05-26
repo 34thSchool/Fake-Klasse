@@ -20,14 +20,14 @@ func Class_Students(state *state.State, s *storage.Storage, id int) ui.Screen {
 
 	//Creating a widget.Clickable slice of all students in DB
 	var widgetList []widget.Clickable
-	for range *s.GetClassStudents(s.GetClassByID(id)) {
+	for range *s.GetClassStudents(s.GetClassByIndex(id)) {
 		var widget widget.Clickable
 		widgetList = append(widgetList, widget)
 	}
 
 	//fmt.Println("calling students from class with index: ", id)
 
-	var students *[]storage.Student = s.GetClassStudents(s.GetClassByID(id))
+	var students *[]storage.Student = s.GetClassStudents(s.GetClassByIndex(id))
 
 	return func(graphicalContext layout.Context) (ui.Screen, func(graphicalContext layout.Context)) {
 		// Rendering:
@@ -43,7 +43,7 @@ func Class_Students(state *state.State, s *storage.Storage, id int) ui.Screen {
 			}.Layout(graphicalContext,
 				// Title:
 				layout.Rigid(
-					ui.DrawTitle(state, 70, s.GetClassByID(id).Name, ui.TitleColor, ui.Margins{Right: 0, Left: 0, Top: 0, Bottom: 0}),
+					ui.DrawTitle(state, 70, s.GetClassByIndex(id).Name, ui.TitleColor, ui.Margins{Right: 0, Left: 0, Top: 0, Bottom: 0}),
 				),
 				// List:
 				layout.Rigid(

@@ -44,12 +44,11 @@ func (storage *Storage) Init(path string) {
 }
 func (storage *Storage) CreateTable(schema string) {
 	// Creating tables if they don't exist:
-	result, err := storage.db.Exec(schema)
-	if err != nil {
+	// if db, err = sqlx.Open("sqlite", path); err != nil {
+	// 	return nil, err
+	// }
+	if _, err := storage.db.Exec(schema); err != nil {
 		log.Fatal("table creation failed. Query: ", schema, "\nError:", err)
-	}
-	if count, err := result.RowsAffected(); err != nil {
-		log.Fatal(count, " rows affected.")
 	}
 }
 func (storage *Storage) Close() { // To control flow in other files.
@@ -67,25 +66,22 @@ type Student struct {
 func (storage *Storage) AddStudent(name, surname string, className string) {
 
 	// Inserting student into students table:
-	result, err := storage.db.Exec(insertStudent, name, surname, className)
-	if err != nil {
+	if _, err := storage.db.Exec(insertStudent, name, surname, className); err != nil {
 		log.Fatal("student insertion failed. Query: ", insertStudent, "\nError:", err)
 	}
-	if count, err := result.RowsAffected(); err != nil {
-		log.Fatal(count, " rows affected.")
-	}
+
 	// Linking class to student:
 	// Checking if class with this name doesn't exist already:
-	rows, err := storage.db.Query("SELECT * FROM classes WHERE name = (?)", className)
-	if err != nil {
+	if _, err := storage.db.Query("SELECT * FROM classes WHERE name = (?)", className); err != nil {
 		log.Fatal(err)
 	}
-	rows.Close()
 
 	//storage.AddClass(class.Name)
 
 	// Linking class to student:
-	storage.db.Exec(linkClassToStudent)
+	if _, err := storage.db.Exec(linkClassToStudent); err != nil{
+		log.Fatal("linking class to student failed. Query: ", linkClassToStudent, "\nError:", err)
+	}
 }
 func (storage *Storage) GetAllStudents() *[]Student { // Writes all the students from table to slice.
 
@@ -156,21 +152,13 @@ func (storage *Storage) PrintAllStudents() {
 	}
 }
 func (storage *Storage) DeleteAllStudents() {
-	result, err := storage.db.Exec(deleteAllStudents)
-	if err != nil {
+	if _, err := storage.db.Exec(deleteAllStudents); err != nil {
 		log.Fatal("student deletion failed. Query: ", deleteAllStudents, "\nError:", err)
-	}
-	if count, err := result.RowsAffected(); err != nil {
-		log.Fatal(count, " rows affected.")
 	}
 }
 func (storage *Storage) DeleteStudent(id int) {
-	result, err := storage.db.Exec(deleteStudentByID, id)
-	if err != nil {
+	if _, err := storage.db.Exec(deleteStudentByID, id); err != nil {
 		log.Fatal("student deletion failed. Query: ", deleteStudentByID, "\nError:", err)
-	}
-	if count, err := result.RowsAffected(); err != nil {
-		log.Fatal(count, " rows affected.")
 	}
 }
 
@@ -186,22 +174,19 @@ func (storage *Storage) UpdateAllClassStudentsClass(prevClassName, newClassName 
 // Single student:
 func (storage *Storage) updateStudentClass(student Student, newClassName string) {
 	update := `UPDATE students SET class = (?) WHERE rowid = (?)`
-	_, err := storage.db.Exec(update, newClassName, student.Rowid)
-	if err != nil {
+	if _, err := storage.db.Exec(update, newClassName, student.Rowid); err != nil {
 		log.Fatal("student update failed. Query: ", update, "\nError:", err)
 	}
 }
 func (storage *Storage) updateStudentName(student Student, newName string) {
 	update := `UPDATE students SET name = (?) WHERE rowid = (?)`
-	_, err := storage.db.Exec(update, newName, student.Rowid)
-	if err != nil {
+	if _, err := storage.db.Exec(update, newName, student.Rowid); err != nil {
 		log.Fatal("student update failed. Query: ", update, "\nError:", err)
 	}
 }
 func (storage *Storage) updateStudentSurname(student Student, newSurname string) {
 	update := `UPDATE students SET surname = (?) WHERE rowid = (?)`
-	_, err := storage.db.Exec(update, newSurname, student.Rowid)
-	if err != nil {
+	if _, err := storage.db.Exec(update, newSurname, student.Rowid); err != nil {
 		log.Fatal("student update failed. Query: ", update, "\nError:", err)
 	}
 }
@@ -224,33 +209,20 @@ type Class struct {
 }
 
 func (storage *Storage) AddClass(className string) {
-	// Adding class to classes table:
-	result, err := storage.db.Exec(insertClass, className) //class.Name
-	if err != nil {
+	// Adding class to classes table
+	if _, err := storage.db.Exec(insertClass, className); err != nil {
 		log.Fatal("class insertion failed. Query: ", insertClass, "\nError:", err)
-	}
-	if count, err := result.RowsAffected(); err != nil {
-		log.Fatal(count, " rows affected.")
 	}
 }
 func (storage *Storage) DeleteAllClasses() {
-	result, err := storage.db.Exec(deleteAllClasses)
-	if err != nil {
+	if _, err := storage.db.Exec(deleteAllClasses); err != nil {
 		log.Fatal("class deletion failed. Query: ", deleteAllClasses, "\nError:", err)
-	}
-	if count, err := result.RowsAffected(); err != nil {
-		log.Fatal(count, " rows affected.")
 	}
 }
 func (storage *Storage) DeleteClass(class Class) {
 
-	//fmt.Println("Delete Class: ", class)
-	result, err := storage.db.Exec(deleteClassByID, class.Rowid)
-	if err != nil {
-		log.Fatal(" DEL!!! class deletion failed. Query: ", deleteClassByID, "\nError:", err)
-	}
-	if count, err := result.RowsAffected(); err != nil {
-		log.Fatal(count, " rows affected.")
+	if _, err := storage.db.Exec(deleteClassByID, class.Rowid); err != nil {
+		log.Fatal("class deletion failed. Query: ", deleteClassByID, "\nError:", err)
 	}
 
 	// Annulating class field for all the students from this class:
@@ -280,11 +252,11 @@ func (storage *Storage) GetAllClasses() *[]Class {
 
 	return &classes
 }
-func (storage *Storage) GetClassByID(id int) Class {
+func (storage *Storage) GetClassByIndex(index int) Class {
 
 	classes := storage.GetAllClasses()
 
-	return (*classes)[id]
+	return (*classes)[index]
 }
 func (storage *Storage) PrintAllClasses() {
 
