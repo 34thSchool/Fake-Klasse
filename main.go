@@ -3,11 +3,13 @@ package main
 import (
 	"os"
 
-	"gioui.org/app"       // Window handling.
+	"gioui.org/app" // Window handling.
+	"gioui.org/font/gofont"
 	"gioui.org/io/system" // Events
 	"gioui.org/layout"    // Dimensions, constraints, directions, flexbox.
 	"gioui.org/op"
 	"gioui.org/unit" // implements device independent units and values. e.g. dp - device independent pixel, sp - scaled pixel - used for text sizes. and more.
+	"gioui.org/widget/material"
 
 	//"gioui.org/widget"          // UI component state tracking and event handling: Is the mouse hovering over the button? Is button pressed, and how many times?
 
@@ -34,10 +36,13 @@ func main() {
 func mainLoop(window *app.Window) error {
 
 	// Initializing DB:
-	storage.Singleton.Init("school.db")
-	defer storage.Singleton.Close()
+	storage := storage.Storage{}
+	storage.Init("school.db")
 
-	currentLayout := layouts.MainMenu() // Declarating widgets and passing the drawing function as currentLayout. We're NOT drawing.
+	state := state.State{Theme: material.NewTheme(gofont.Collection()), ShouldQuit: false}
+
+
+	currentLayout := layouts.MainMenu(&state, &storage) // Declarating widgets and passing the drawing function as currentLayout. We're NOT drawing.
 	//currentLayout := layouts.Students(theme, &operations, &storage)
 
 	for event := range window.Events() {

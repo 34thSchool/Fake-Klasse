@@ -8,7 +8,6 @@ import (
 	_ "modernc.org/sqlite"
 )
 
-
 // Queries:
 // Students:
 var studentsSchema = `CREATE TABLE IF NOT EXISTS students (name TEXT, surname TEXT, class TEXT, 
@@ -30,11 +29,7 @@ var linkClassToStudent = `SELECT name FROM classes INNER JOIN students ON classe
 type Storage struct {
 	db *sqlx.DB
 }
-	
-// Shortcut for accessing singleton:
-var S = Singleton
 
-var Singleton *Storage = &Storage{} // Singleton
 func (storage *Storage) Init(path string) {
 	// Creating and/or opening DB:
 	db, err := sqlx.Open("sqlite", path)
@@ -178,6 +173,7 @@ func (storage *Storage) DeleteStudent(id int) {
 		log.Fatal(count, " rows affected.")
 	}
 }
+
 // All students:
 func (storage *Storage) UpdateAllClassStudentsClass(prevClassName, newClassName string) {
 	update := `UPDATE students SET class = (?) WHERE class = (?)`
@@ -186,36 +182,37 @@ func (storage *Storage) UpdateAllClassStudentsClass(prevClassName, newClassName 
 		log.Fatal("student update failed. Query: ", update, "\nError:", err)
 	}
 }
+
 // Single student:
-func (storage *Storage) updateStudentClass(student Student, newClassName string){
+func (storage *Storage) updateStudentClass(student Student, newClassName string) {
 	update := `UPDATE students SET class = (?) WHERE rowid = (?)`
 	_, err := storage.db.Exec(update, newClassName, student.Rowid)
 	if err != nil {
 		log.Fatal("student update failed. Query: ", update, "\nError:", err)
 	}
 }
-func (storage *Storage) updateStudentName(student Student, newName string){
+func (storage *Storage) updateStudentName(student Student, newName string) {
 	update := `UPDATE students SET name = (?) WHERE rowid = (?)`
 	_, err := storage.db.Exec(update, newName, student.Rowid)
 	if err != nil {
 		log.Fatal("student update failed. Query: ", update, "\nError:", err)
 	}
 }
-func (storage *Storage) updateStudentSurname(student Student, newSurname string){
+func (storage *Storage) updateStudentSurname(student Student, newSurname string) {
 	update := `UPDATE students SET surname = (?) WHERE rowid = (?)`
 	_, err := storage.db.Exec(update, newSurname, student.Rowid)
 	if err != nil {
 		log.Fatal("student update failed. Query: ", update, "\nError:", err)
 	}
 }
-func (storage *Storage) UpdateStudent(prevStudent Student, newStudent Student){
-	if newStudent.Name != ""{
+func (storage *Storage) UpdateStudent(prevStudent Student, newStudent Student) {
+	if newStudent.Name != "" {
 		storage.updateStudentName(prevStudent, newStudent.Name)
 	}
-	if newStudent.Surname != ""{
+	if newStudent.Surname != "" {
 		storage.updateStudentSurname(prevStudent, newStudent.Surname)
 	}
-	if newStudent.Class != ""{
+	if newStudent.Class != "" {
 		storage.updateStudentClass(prevStudent, newStudent.Class)
 	}
 }

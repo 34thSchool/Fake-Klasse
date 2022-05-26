@@ -2,6 +2,7 @@
 package layouts
 
 import (
+	"fake-klasse/state"
 	"fake-klasse/storage"
 	"fake-klasse/ui"
 
@@ -9,7 +10,7 @@ import (
 	"gioui.org/widget"
 )
 
-func Students() ui.Screen {
+func Students(state *state.State, s *storage.Storage) ui.Screen {
 
 	// Widget declaration:
 	var (
@@ -18,7 +19,7 @@ func Students() ui.Screen {
 		list             widget.List = widget.List{List: layout.List{Axis: layout.Vertical}}
 	)
 	//Creating a widget.Clickable slice of all students in DB
-	students := storage.Singleton.GetAllStudents()
+	students := s.GetAllStudents()
 	var widgetList []widget.Clickable
 	for range *students {
 		var widget widget.Clickable
@@ -39,11 +40,11 @@ func Students() ui.Screen {
 			}.Layout(graphicalContext,
 				// Title:
 				layout.Rigid(
-					ui.DrawTitle(70, "Students", ui.TitleColor, ui.Rect{Right: 0, Left: 0, Top: 0, Bottom: 0}),
+					ui.DrawTitle(state, 70, "Students", ui.TitleColor, ui.Margins{Right: 0, Left: 0, Top: 0, Bottom: 0}),
 				),
 				// List:
 				layout.Rigid(
-					ui.DrawStudentListWithMargins(graphicalContext, &widgetList, storage.Singleton.GetAllStudents(), &list, ui.Rect{Right: 0, Left: 0, Top: 0, Bottom: 175}),
+					ui.DrawStudentListWithMargins(state, graphicalContext, &widgetList, s.GetAllStudents(), &list, ui.Margins{Right: 0, Left: 0, Top: 0, Bottom: 175}),
 				),
 			)
 
@@ -55,24 +56,24 @@ func Students() ui.Screen {
 
 				// Add Student button:
 				layout.Rigid(
-					ui.DrawButtonWithMargins(&addStudentButton, "Add Student", 15, ui.Rect{Right: 175, Left: 175, Top: 0, Bottom: 25}, ui.ButtonColor),
+					ui.DrawButtonWithMargins(state, &addStudentButton, "Add Student", 15, ui.Margins{Right: 175, Left: 175, Top: 0, Bottom: 25}, ui.ButtonColor),
 				),
 				// Close button:
 				layout.Rigid(
-					ui.DrawButtonWithMargins(&closeButton, "Close", 15, ui.Rect{Right: 200, Left: 200, Top: 0, Bottom: 35}, ui.ButtonColor),
+					ui.DrawButtonWithMargins(state, &closeButton, "Close", 15, ui.Margins{Right: 200, Left: 200, Top: 0, Bottom: 35}, ui.ButtonColor),
 				),
 			)
 		}
 		// Event handling:
 		if closeButton.Clicked() {
-			return MainMenu(), layout
+			return MainMenu(state, s), layout
 		}
 		if addStudentButton.Clicked() {
-			return Add_Student(), layout
+			return Add_Student(state, s), layout
 		}
 		for index := range widgetList {
 			if widgetList[index].Clicked() {
-				return Edit_Student(index, Students()), layout
+				return Edit_Student(state, s, index, Students(state, s)), layout
 			}
 		}
 		return nil, layout

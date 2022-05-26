@@ -6,10 +6,11 @@ import (
 	"gioui.org/widget"
 
 	"fake-klasse/state"
+	"fake-klasse/storage"
 	"fake-klasse/ui"
 )
 
-func MainMenu() ui.Screen {
+func MainMenu(state *state.State, s *storage.Storage) ui.Screen {
 
 	// Widget declaration:
 	var (
@@ -30,7 +31,7 @@ func MainMenu() ui.Screen {
 				Spacing: layout.SpaceEnd, // Top
 			}.Layout(graphicalContext,
 				layout.Rigid(
-					ui.DrawTitle(70, "Fake-Klasse", ui.TitleColor, ui.Rect{Right: 0, Left: 0, Top: 0, Bottom: 0}),
+					ui.DrawTitle(state, 70, "Fake-Klasse", ui.TitleColor, ui.Margins{Right: 0, Left: 0, Top: 0, Bottom: 0}),
 				),
 			)
 			// Flexbox with Middle alignment:
@@ -39,10 +40,10 @@ func MainMenu() ui.Screen {
 				Spacing: layout.SpaceSides, // Middle
 			}.Layout(graphicalContext,
 				layout.Rigid(
-					ui.DrawButtonWithMargins(&studentsButton, "Students", 15, ui.Rect{Right: 175, Left: 175, Top: 0, Bottom: 25}, ui.ButtonColor),
+					ui.DrawButtonWithMargins(state, &studentsButton, "Students", 15, ui.Margins{Right: 175, Left: 175, Top: 0, Bottom: 25}, ui.ButtonColor),
 				),
 				layout.Rigid(
-					ui.DrawButtonWithMargins(&classesButton, "Classes", 15, ui.Rect{Right: 175, Left: 175, Top: 0, Bottom: 0}, ui.ButtonColor),
+					ui.DrawButtonWithMargins(state, &classesButton, "Classes", 15, ui.Margins{Right: 175, Left: 175, Top: 0, Bottom: 0}, ui.ButtonColor),
 				),
 			)
 			// Flexbox with Bottom alignment:
@@ -51,16 +52,16 @@ func MainMenu() ui.Screen {
 				Spacing: layout.SpaceStart, // Bottom
 			}.Layout(graphicalContext,
 				layout.Rigid(
-					ui.DrawButtonWithMargins(&quitButton, "Quit", 15, ui.Rect{Right: 200, Left: 200, Top: 0, Bottom: 35}, ui.ButtonColor),
+					ui.DrawButtonWithMargins(state, &quitButton, "Quit", 15, ui.Margins{Right: 200, Left: 200, Top: 0, Bottom: 35}, ui.ButtonColor),
 				),
 			)
 		}
 		// Event handling:
 		if studentsButton.Clicked() {
-			return Students(), layout
+			return Students(state, s), layout
 		}
 		if classesButton.Clicked() {
-			return Classes(), layout
+			return Classes(state, s), layout
 		}
 		if quitButton.Clicked() {
 			state.ShouldQuit = true

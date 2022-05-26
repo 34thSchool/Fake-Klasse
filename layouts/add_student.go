@@ -1,6 +1,7 @@
 package layouts
 
 import (
+	"fake-klasse/state"
 	"fake-klasse/storage"
 	"fake-klasse/ui"
 	"strings"
@@ -9,7 +10,7 @@ import (
 	"gioui.org/widget"
 )
 
-func Add_Student() ui.Screen {
+func Add_Student(state *state.State, s *storage.Storage) ui.Screen {
 
 	// Widget declaration:
 	var (
@@ -31,7 +32,7 @@ func Add_Student() ui.Screen {
 	//Creating a widget.Clickable slice of all classes in DB
 	//classes := storage.Singleton.GetAllClasses()
 	var widgetList []widget.Clickable
-	for range *storage.Singleton.GetAllClasses() {
+	for range *s.GetAllClasses() {
 		var widget widget.Clickable
 		widgetList = append(widgetList, widget)
 	}
@@ -49,7 +50,7 @@ func Add_Student() ui.Screen {
 			}.Layout(graphicalContext,
 				// Title:
 				layout.Rigid(
-					ui.DrawTitle(70, "Add Student", ui.TitleColor, ui.Rect{Right: 0, Left: 0, Top: 0, Bottom: 0}),
+					ui.DrawTitle(state, 70, "Add Student", ui.TitleColor, ui.Margins{Right: 0, Left: 0, Top: 0, Bottom: 0}),
 				),
 			)
 
@@ -58,8 +59,8 @@ func Add_Student() ui.Screen {
 				Axis:    layout.Horizontal,
 				Spacing: layout.SpaceAround,
 			}.Layout(graphicalContext,
-				layout.Flexed(1, ui.DrawInputWithMargins(&nameWidget, "Name", 25, ui.Rect{Right: 0, Left: 50, Top: 150, Bottom: 0})),
-				layout.Flexed(1, ui.DrawInputWithMargins(&surnameWidget, "Surname", 25, ui.Rect{Right: 50, Left: 25, Top: 150, Bottom: 0})),
+				layout.Flexed(1, ui.DrawInputWithMargins(state, &nameWidget, "Name", 25, ui.Margins{Right: 0, Left: 50, Top: 150, Bottom: 0})),
+				layout.Flexed(1, ui.DrawInputWithMargins(state, &surnameWidget, "Surname", 25, ui.Margins{Right: 50, Left: 25, Top: 150, Bottom: 0})),
 			)
 
 			layout.Flex{
@@ -67,7 +68,7 @@ func Add_Student() ui.Screen {
 				Spacing: layout.SpaceEnd, //space sides
 			}.Layout(graphicalContext,
 				layout.Rigid(
-					ui.DrawButtonWithMargins(&classButton, classButtonText, 20, ui.Rect{Right: 175, Left: 175, Top: 230, Bottom: 0}, ui.ClassButtonColor),
+					ui.DrawButtonWithMargins(state, &classButton, classButtonText, 20, ui.Margins{Right: 175, Left: 175, Top: 230, Bottom: 0}, ui.ClassButtonColor),
 				),
 			)
 
@@ -80,13 +81,13 @@ func Add_Student() ui.Screen {
 				// Save button:
 				layout.Rigid(
 					ui.InputCheck(
-						ui.DrawButtonWithMargins(&saveButton, "Save", 15, ui.Rect{Right: 175, Left: 175, Top: 0, Bottom: 25}, ui.ButtonColor),
+						ui.DrawButtonWithMargins(state, &saveButton, "Save", 15, ui.Margins{Right: 175, Left: 175, Top: 0, Bottom: 25}, ui.ButtonColor),
 						nameWidget, surnameWidget, /* selectedClass.Name,*/
 					),
 				),
 				// Close button:
 				layout.Rigid(
-					ui.DrawButtonWithMargins(&closeButton, "Close", 15, ui.Rect{Right: 200, Left: 200, Top: 0, Bottom: 35}, ui.ButtonColor),
+					ui.DrawButtonWithMargins(state, &closeButton, "Close", 15, ui.Margins{Right: 200, Left: 200, Top: 0, Bottom: 35}, ui.ButtonColor),
 				),
 			)
 
@@ -96,7 +97,7 @@ func Add_Student() ui.Screen {
 					Spacing: layout.SpaceEnd, //around evently sides
 				}.Layout(graphicalContext,
 					layout.Rigid(
-						ui.DrawClassListWithMargins(graphicalContext, &widgetList, storage.Singleton.GetAllClasses(), &classList, ui.Rect{Right: 200, Left: 210, Top: 270, Bottom: 0}),
+						ui.DrawClassListWithMargins(state, graphicalContext, &widgetList, s.GetAllClasses(), &classList, ui.Margins{Right: 200, Left: 210, Top: 270, Bottom: 0}),
 					),
 				)
 			}
@@ -105,15 +106,15 @@ func Add_Student() ui.Screen {
 
 		// Event handling:
 		if closeButton.Clicked() {
-			return Students(), layout
+			return Students(state, s), layout
 		}
 		if saveButton.Clicked() {
-			storage.Singleton.AddStudent(
+			s.AddStudent(
 				strings.TrimSpace(nameWidget.Text()),
 				strings.TrimSpace(surnameWidget.Text()),
 				selectedClass,
 			)
-			return Students(), layout
+			return Students(state, s), layout
 		}
 		if classButton.Clicked() {
 			if drawClassList {
@@ -125,7 +126,7 @@ func Add_Student() ui.Screen {
 		for index := range widgetList {
 			if widgetList[index].Clicked() {
 				drawClassList = false
-				selectedClass = (*storage.Singleton.GetAllClasses())[index].Name //change the text of the classButton
+				selectedClass = (*s.GetAllClasses())[index].Name //change the text of the classButton
 				classButtonText = selectedClass
 			}
 		}

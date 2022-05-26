@@ -1,6 +1,7 @@
 package layouts
 
 import (
+	"fake-klasse/state"
 	"fake-klasse/storage"
 	"fake-klasse/ui"
 
@@ -8,7 +9,7 @@ import (
 	"gioui.org/widget"
 )
 
-func Class_Students(id int) ui.Screen {
+func Class_Students(state *state.State, s *storage.Storage, id int) ui.Screen {
 
 	// Widget declaration:
 	var (
@@ -19,14 +20,14 @@ func Class_Students(id int) ui.Screen {
 
 	//Creating a widget.Clickable slice of all students in DB
 	var widgetList []widget.Clickable
-	for range *storage.Singleton.GetClassStudents(storage.Singleton.GetClassByID(id)) {
+	for range *s.GetClassStudents(s.GetClassByID(id)) {
 		var widget widget.Clickable
 		widgetList = append(widgetList, widget)
 	}
 
 	//fmt.Println("calling students from class with index: ", id)
 
-	var students *[]storage.Student = storage.Singleton.GetClassStudents(storage.Singleton.GetClassByID(id))
+	var students *[]storage.Student = s.GetClassStudents(s.GetClassByID(id))
 
 	return func(graphicalContext layout.Context) (ui.Screen, func(graphicalContext layout.Context)) {
 		// Rendering:
@@ -42,11 +43,11 @@ func Class_Students(id int) ui.Screen {
 			}.Layout(graphicalContext,
 				// Title:
 				layout.Rigid(
-					ui.DrawTitle(70, storage.Singleton.GetClassByID(id).Name, ui.TitleColor, ui.Rect{Right: 0, Left: 0, Top: 0, Bottom: 0}),
+					ui.DrawTitle(state, 70, s.GetClassByID(id).Name, ui.TitleColor, ui.Margins{Right: 0, Left: 0, Top: 0, Bottom: 0}),
 				),
 				// List:
 				layout.Rigid(
-					ui.DrawStudentListWithMargins(graphicalContext, &widgetList, students, &list, ui.Rect{Right: 0, Left: 0, Top: 0, Bottom: 175}),
+					ui.DrawStudentListWithMargins(state, graphicalContext, &widgetList, students, &list, ui.Margins{Right: 0, Left: 0, Top: 0, Bottom: 175}),
 				),
 			)
 
@@ -58,24 +59,24 @@ func Class_Students(id int) ui.Screen {
 
 				// Add Student button:
 				layout.Rigid(
-					ui.DrawButtonWithMargins(&editClassButton, "Edit Class", 15, ui.Rect{Right: 175, Left: 175, Top: 0, Bottom: 25}, ui.ButtonColor),
+					ui.DrawButtonWithMargins(state, &editClassButton, "Edit Class", 15, ui.Margins{Right: 175, Left: 175, Top: 0, Bottom: 25}, ui.ButtonColor),
 				),
 				// Close button:
 				layout.Rigid(
-					ui.DrawButtonWithMargins(&closeButton, "Close", 15, ui.Rect{Right: 200, Left: 200, Top: 0, Bottom: 35}, ui.ButtonColor),
+					ui.DrawButtonWithMargins(state, &closeButton, "Close", 15, ui.Margins{Right: 200, Left: 200, Top: 0, Bottom: 35}, ui.ButtonColor),
 				),
 			)
 		}
 		// Event handling:
 		if closeButton.Clicked() {
-			return Classes(), layout
+			return Classes(state, s), layout
 		}
 		if editClassButton.Clicked() {
-			return Edit_Class(id), layout
+			return Edit_Class(state, s, id), layout
 		}
 		for index := range widgetList {
 			if widgetList[index].Clicked() {
-				return Edit_Student(index, Class_Students(id)), layout
+				return Edit_Student(state, s, index, Class_Students(state, s, id)), layout
 			}
 		}
 		return nil, layout
