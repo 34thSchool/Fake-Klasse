@@ -76,13 +76,17 @@ func Edit_Class(state *state.State, s *storage.Storage, index int) ui.Screen {
 		}
 		if saveButton.Clicked() {
 
-			s.UpdateAllClassStudentsClass((*s.GetAllClasses())[index].Name, strings.TrimSpace(classWidget.Text()))
+			className := strings.TrimSpace(classWidget.Text())
 
-			s.DeleteClass((*s.GetAllClasses())[index])
-
-			s.AddClass(
-				strings.TrimSpace(classWidget.Text()),
-			)
+			if className != ""{ // If user entered smth
+				s.UpdateAllClassStudentsClass((*s.GetAllClasses())[index].Name, className)
+				
+				s.DeleteClass((*s.GetAllClasses())[index])
+	
+				s.AddClass(
+					strings.TrimSpace(classWidget.Text()),
+				)
+			}
 
 			return Class_Students(state, s, index), layout
 		}
