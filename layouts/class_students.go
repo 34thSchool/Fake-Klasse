@@ -11,7 +11,7 @@ import (
 	"gioui.org/widget/material"
 )
 
-func Class_Students(state *state.State, theme *material.Theme, s *storage.Storage, index int) ui.Screen {
+func Class_Students(state *state.State, theme *material.Theme, s *storage.Storage, id int) ui.Screen {
 
 	// Widget declaration:
 	var (
@@ -27,7 +27,7 @@ func Class_Students(state *state.State, theme *material.Theme, s *storage.Storag
 		log.Println("unable to get classes:", err)
 		return nil
 	}
-	students, err := s.GetClassStudents(classes[index])
+	students, err := s.GetClassStudents(classes[id])
 	if err != nil{
 		log.Println("unable to get class students:", err)
 		return nil
@@ -51,7 +51,7 @@ func Class_Students(state *state.State, theme *material.Theme, s *storage.Storag
 			}.Layout(gtx,
 				// Title:
 				layout.Rigid(
-					ui.DrawTitle(state, theme, 70, classes[index].Name, ui.TitleColor, ui.Margins{Right: 0, Left: 0, Top: 0, Bottom: 0},
+					ui.DrawTitle(state, theme, 70, classes[id].Name, ui.TitleColor, ui.Margins{Right: 0, Left: 0, Top: 0, Bottom: 0},
 					),
 				),
 			
@@ -82,11 +82,11 @@ func Class_Students(state *state.State, theme *material.Theme, s *storage.Storag
 			return Classes(state, theme, s), layout
 		}
 		if editClassButton.Clicked() {
-			return Edit_Class(state, theme, s, index), layout
+			return Edit_Class(state, theme, s, id), layout
 		}
 		for index := range widgetList {
 			if widgetList[index].Clicked() {
-				return Edit_Student(state, theme, s, index, Class_Students(state, theme, s, index)), layout
+				return Edit_Student(state, theme, s, index, Class_Students(state, theme, s, id)), layout
 			}
 		}
 		return nil, layout
