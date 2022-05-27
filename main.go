@@ -39,30 +39,31 @@ func mainLoop(window *app.Window) error {
 	storage := storage.Storage{}
 	storage.Init("school.db")
 
-	state := state.State{Theme: material.NewTheme(gofont.Collection()), ShouldQuit: false}
+	state := state.State{ShouldQuit: false}
 
+	theme :=  material.NewTheme(gofont.Collection())
 
-	currentLayout := layouts.MainMenu(&state, &storage) // Declarating widgets and passing the drawing function as currentLayout. We're NOT drawing.
+	currentLayout := layouts.MainMenu(&state, theme, &storage) // Declarating widgets and passing the drawing function as currentLayout. We're NOT drawing.
 	//currentLayout := layouts.Students(theme, &operations, &storage)
 
 	for event := range window.Events() {
 		switch event := event.(type) {
 		case system.FrameEvent:
-			graphicalContext := layout.NewContext(&op.Ops{}, event)
+			gtx := layout.NewContext(&op.Ops{}, event)
 
 			// Drawing here:
-			nextLayout, drawLayout := currentLayout(graphicalContext)
+			nextLayout, drawLayout := currentLayout(gtx)
 			if nextLayout != nil {
 				currentLayout = nextLayout
 			}
-			drawLayout(graphicalContext)
+			drawLayout(gtx)
 
 			// Checking whether or not we should quit:
 			if state.ShouldQuit {
 				window.Perform(system.ActionClose)
 			}
 
-			event.Frame(graphicalContext.Ops)
+			event.Frame(gtx.Ops)
 
 		case system.DestroyEvent: // Sent when the app is closed.
 			return event.Err // event.Err returns nil if app has been closed normally, and Err if something inappropriate caused a closure.

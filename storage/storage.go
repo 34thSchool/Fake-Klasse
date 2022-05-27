@@ -2,57 +2,57 @@ package storage
 
 import (
 	"fmt"
-	"log"
 
 	"github.com/jmoiron/sqlx"
 	_ "modernc.org/sqlite"
 )
 
-
 // Queries:
-// Students:
-var studentsSchema = `CREATE TABLE IF NOT EXISTS students (name TEXT, surname TEXT, class TEXT, 
-					FOREIGN KEY ("class") REFERENCES "classes"("name"));`
-var selectStudents = `SELECT rowid, name, surname, class FROM students`
-var insertStudent = `INSERT INTO students (name, surname, class) VALUES(?, ?, ?)`
-var deleteAllStudents = `DELETE FROM students`
-var deleteStudentByID = `DELETE FROM students WHERE rowid IN (?)`
+const (
+	// Students:
+	studentsSchema = `CREATE TABLE IF NOT EXISTS students (name TEXT, surname TEXT, class TEXT, 
+				FOREIGN KEY ("class") REFERENCES "classes"("name"));`
+	selectStudents    = `SELECT rowid, name, surname, class FROM students`
+	insertStudent     = `INSERT INTO students (name, surname, class) VALUES(?, ?, ?)`
+	deleteAllStudents = `DELETE FROM students`
+	deleteStudentByID = `DELETE FROM students WHERE rowid IN (?)`
 
-// Classes:
-var classesSchema = `CREATE TABLE IF NOT EXISTS classes (name TEXT UNIQUE);`
-var selectAllClasses = `SELECT rowid, name FROM classes`
-var insertClass = `INSERT OR IGNORE INTO classes (name) VALUES (?)`
-var deleteAllClasses = `DELETE FROM classes`
-var deleteClassByID = `DELETE FROM classes WHERE rowid IN (?)`
-var linkClassToStudent = `SELECT name FROM classes INNER JOIN students ON classes.name = students.class;`
+	// Classes:
+	classesSchema      = `CREATE TABLE IF NOT EXISTS classes (name TEXT UNIQUE);`
+	selectAllClasses   = `SELECT rowid, name FROM classes`
+	insertClass        = `INSERT OR IGNORE INTO classes (name) VALUES (?)`
+	deleteAllClasses   = `DELETE FROM classes`
+	deleteClassByID    = `DELETE FROM classes WHERE rowid IN (?)`
+	linkClassToStudent = `SELECT name FROM classes INNER JOIN students ON classes.name = students.class;`
+)
 
 // Storage:
 type Storage struct {
 	db *sqlx.DB
 }
 
-func (storage *Storage) Init(path string) {
+func (s *Storage) Init(path string) error {
 	// Creating and/or opening DB:
 	db, err := sqlx.Open("sqlite", path)
 	if err != nil {
-		log.Fatal("failed to open SQLite DB: ", db)
+		//log.Fatal("failed to open SQLite DB: ", db)
+		return err
 	}
-	storage.db = db
+	s.db = db
 
 	// Creating tables if they don't exist:
-	storage.CreateTable(studentsSchema)
-	storage.CreateTable(classesSchema)
-}
-func (storage *Storage) CreateTable(schema string) {
-	// Creating tables if they don't exist:
-	_, err := storage.db.Exec(schema)
-	if err != nil {
-		log.Fatal("table creation failed. Query: ", schema, "\nError:", err)
-	}
+	s.CreateTable(studentsSchema)
+	s.CreateTable(classesSchema)
 
+	return nil
 }
-func (storage *Storage) Close() { // To control flow in other files.
-	storage.db.Close()
+func (s *Storage) CreateTable(schema string) error {
+	// Creating tables if they don't exist:
+	_, err := s.db.Exec(schema)
+	return err
+}
+func (s *Storage) Close() { // To control flow in other files.
+	s.db.Close()
 }
 
 // Student:
@@ -63,147 +63,129 @@ type Student struct {
 	Class   string
 }
 
-func (storage *Storage) AddStudent(name, surname string, className string) {
+func (s *Storage) AddStudent(name, surname string, className string) error {
 
 	// Inserting student into students table:
-	_, err := storage.db.Exec(insertStudent, name, surname, className)
+	_, err := s.db.Exec(insertStudent, name, surname, className)
 	if err != nil {
-		log.Fatal("student insertion failed. Query: ", insertStudent, "\nError:", err)
+		//log.Fatal("student insertion failed. Query: ", insertStudent, "\nError:", err)
+		return err
 	}
 
 	// Linking class to student:
 	// Checking if class with this name doesn't exist already:
-	rows, err := storage.db.Query("SELECT * FROM classes WHERE name = (?)", className)
+	rows, err := s.db.Query("SELECT * FROM classes WHERE name = (?)", className)
 	if err != nil {
-		log.Fatal(err)
+		//log.Fatal(err)
+		return err
 	}
 	rows.Close()
 
-	//storage.AddClass(class.Name)
+	//s.AddClass(class.Name)
 
 	// Linking class to student:
-	storage.db.Exec(linkClassToStudent)
+	_, err = s.db.Exec(linkClassToStudent)
+	
+	return err
 }
-func (storage *Storage) GetAllStudents() *[]Student { // Writes all the students from table to slice.
+func (s *Storage) GetAllStudents() ([]Student, error){ // Writes all the students from table to slice.
 
 	var students []Student
 
-	// if err := storage.db.Select(&students, selectStudents); err != nil {
-	// 	log.Fatal("querying 'students' table failed. Query: ", selectStudents, "\nError: ", err)
-	// }
-
-	rows, err := storage.db.Query(selectStudents)
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer rows.Close()
-	for i := 0; rows.Next(); i++ {
-		students = append(students, Student{})
-		err := rows.Scan(&students[i].Rowid, &students[i].Name, &students[i].Surname, &students[i].Class)
-		if err != nil {
-			log.Fatal(err)
-		}
-	}
-	err = rows.Err()
-	if err != nil {
-		log.Fatal(err)
+	if err := s.db.Select(&students, selectStudents); err != nil {
+		//log.Fatal("querying 'students' table failed. Query: ", selectStudents, "\nError: ", err)
+		return nil, err
 	}
 
-	return &students
+	return students, nil
 }
-func (storage *Storage) GetClassStudents(class Class) *[]Student {
+func (s *Storage) GetClassStudents(class Class) ([]Student, error) {
 
 	var students []Student
 
-	rows, err := storage.db.Query(`SELECT * FROM students WHERE class = (?)`, class.Name)
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer rows.Close()
-	for i := 0; rows.Next(); i++ {
-		students = append(students, Student{})
-		err := rows.Scan( /*&students[i].Rowid,*/ &students[i].Name, &students[i].Surname, &students[i].Class)
-		if err != nil {
-			log.Fatal(err)
-		}
-	}
-	err = rows.Err()
-	if err != nil {
-		log.Fatal(err)
+	if err := s.db.Select(&students, `SELECT * FROM students WHERE class = (?)`, class.Name); err != nil{
+		//log.Fatal(err)
+		return nil, err
 	}
 
-	return &students
+	return students, nil
 }
-func (storage *Storage) PrintClassStudents(class Class) {
+func (s *Storage) PrintClassStudents(class Class) error {
 	// Getting students:
-	students := storage.GetClassStudents(class)
+	students, err := s.GetClassStudents(class)
+	if err != nil{
+		return err
+	}
 
 	// Printing:
-	for _, student := range *students {
+	for _, student := range students {
 		fmt.Print(student.Name, " ", student.Surname, " ", student.Class, "\n")
 	}
-}
-func (storage *Storage) PrintAllStudents() {
-	// Getting students:
-	students := storage.GetAllStudents()
 
+	return nil
+}
+func (s *Storage) PrintAllStudents() error {
+	// Getting students:
+	students, err := s.GetAllStudents()
+	if err != nil{
+		return err
+	}
 	// Printing:
-	for _, student := range *students {
+	for _, student := range students {
 		fmt.Print(student.Rowid, ": ", student.Name, " ", student.Surname, " ", student.Class, "\n")
 	}
+
+	return nil
 }
-func (storage *Storage) DeleteAllStudents() {
-	_, err := storage.db.Exec(deleteAllStudents)
-	if err != nil {
-		log.Fatal("student deletion failed. Query: ", deleteAllStudents, "\nError:", err)
-	}
+func (s *Storage) DeleteAllStudents() error {
+	_, err := s.db.Exec(deleteAllStudents)
+	return err
 }
-func (storage *Storage) DeleteStudent(id int) {
-	_, err := storage.db.Exec(deleteStudentByID, id)
-	if err != nil {
-		log.Fatal("student deletion failed. Query: ", deleteStudentByID, "\nError:", err)
-	}
+func (s *Storage) DeleteStudent(id int) error {
+	_, err := s.db.Exec(deleteStudentByID, id)
+	return err
 }
+
 // All students:
-func (storage *Storage) UpdateAllClassStudentsClass(prevClassName, newClassName string) {
+func (s *Storage) UpdateAllClassStudentsClass(prevClassName, newClassName string) error {
 	update := `UPDATE students SET class = (?) WHERE class = (?)`
-	_, err := storage.db.Exec(update, newClassName, prevClassName)
-	if err != nil {
-		log.Fatal("student update failed. Query: ", update, "\nError:", err)
-	}
+	_, err := s.db.Exec(update, newClassName, prevClassName)
+	return err
 }
+
 // Single student:
-func (storage *Storage) updateStudentClass(student Student, newClassName string){
+func (s *Storage) updateStudentClass(student Student, newClassName string) error {
 	update := `UPDATE students SET class = (?) WHERE rowid = (?)`
-	_, err := storage.db.Exec(update, newClassName, student.Rowid)
-	if err != nil {
-		log.Fatal("student update failed. Query: ", update, "\nError:", err)
-	}
+	_, err := s.db.Exec(update, newClassName, student.Rowid)
+	return err
 }
-func (storage *Storage) updateStudentName(student Student, newName string){
+func (s *Storage) updateStudentName(student Student, newName string) error {
 	update := `UPDATE students SET name = (?) WHERE rowid = (?)`
-	_, err := storage.db.Exec(update, newName, student.Rowid)
-	if err != nil {
-		log.Fatal("student update failed. Query: ", update, "\nError:", err)
-	}
+	_, err := s.db.Exec(update, newName, student.Rowid)
+	return err
 }
-func (storage *Storage) updateStudentSurname(student Student, newSurname string){
+func (s *Storage) updateStudentSurname(student Student, newSurname string) error {
 	update := `UPDATE students SET surname = (?) WHERE rowid = (?)`
-	_, err := storage.db.Exec(update, newSurname, student.Rowid)
-	if err != nil {
-		log.Fatal("student update failed. Query: ", update, "\nError:", err)
-	}
+	_, err := s.db.Exec(update, newSurname, student.Rowid)
+	return err
 }
-func (storage *Storage) UpdateStudent(prevStudent Student, newStudent Student){
-	if newStudent.Name != ""{
-		storage.updateStudentName(prevStudent, newStudent.Name)
+func (s *Storage) UpdateStudent(prevStudent Student, newStudent Student) error {
+	var err error
+
+	if newStudent.Name != "" {
+		err = s.updateStudentName(prevStudent, newStudent.Name)
+		if err != nil{return err}
 	}
-	if newStudent.Surname != ""{
-		storage.updateStudentSurname(prevStudent, newStudent.Surname)
+	if newStudent.Surname != "" {
+		err = s.updateStudentSurname(prevStudent, newStudent.Surname)
+		if err != nil{return err}
 	}
-	if newStudent.Class != ""{
-		storage.updateStudentClass(prevStudent, newStudent.Class)
+	if newStudent.Class != "" {
+		err = s.updateStudentClass(prevStudent, newStudent.Class)
+		if err != nil{return err}
 	}
+
+	return nil
 }
 
 // Class:
@@ -212,64 +194,48 @@ type Class struct {
 	Name  string
 }
 
-func (storage *Storage) AddClass(className string) {
+func (s *Storage) AddClass(className string) error {
 	// Adding class to classes table:
-	_, err := storage.db.Exec(insertClass, className) //class.Name
-	if err != nil {
-		log.Fatal("class insertion failed. Query: ", insertClass, "\nError:", err)
-	}
+	_, err := s.db.Exec(insertClass, className)
+	return err
 }
-func (storage *Storage) DeleteAllClasses() {
-	_, err := storage.db.Exec(deleteAllClasses)
-	if err != nil {
-		log.Fatal("class deletion failed. Query: ", deleteAllClasses, "\nError:", err)
-	}
+func (s *Storage) DeleteAllClasses() error {
+	_, err := s.db.Exec(deleteAllClasses)
+	return err
 }
-func (storage *Storage) DeleteClass(class Class) {
+func (s *Storage) DeleteClass(class Class) error {
 
 	//fmt.Println("Delete Class: ", class)
-	_, err := storage.db.Exec(deleteClassByID, class.Rowid)
-	if err != nil {
-		log.Fatal(" DEL!!! class deletion failed. Query: ", deleteClassByID, "\nError:", err)
-	}
+	_, err := s.db.Exec(deleteClassByID, class.Rowid)
+	return err
 
 	// Annulating class field for all the students from this class:
-	//storage.UpdateStudentClass(class.Name, "")//decided not to do it here
+	//s.UpdateStudentClass(class.Name, "")//decided not to do it here
 
-	//storage.S.UpdateStudentClass((*storage.S.GetAllClasses())[id].Name, "")
+	//s.S.UpdateStudentClass((*s.S.GetAllClasses())[id].Name, "")
+
 }
-func (storage *Storage) GetAllClasses() *[]Class {
+func (s *Storage) GetAllClasses() ([]Class, error) {
 	var classes []Class
 
-	rows, err := storage.db.Query(selectAllClasses)
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer rows.Close()
-	for i := 0; rows.Next(); i++ {
-		classes = append(classes, Class{})
-		err := rows.Scan(&classes[i].Rowid, &classes[i].Name)
-		if err != nil {
-			log.Fatal(err)
-		}
-	}
-	err = rows.Err()
-	if err != nil {
-		log.Fatal(err)
+	if err := s.db.Select(&classes, selectAllClasses); err != nil{
+		return nil, err
 	}
 
-	return &classes
+	return classes, nil
 }
-func (storage *Storage) GetClassByIndex(index int) Class {
+func (s *Storage) GetClassByIndex(index int) (*Class, error) {
 
-	classes := storage.GetAllClasses()
-
-	return (*classes)[index]
+	classes, err := s.GetAllClasses()
+	if err != nil{return nil, err}
+	return &(classes)[index], nil
 }
-func (storage *Storage) PrintAllClasses() {
+func (s *Storage) PrintAllClasses() error{
 
-	classes := storage.GetAllClasses()
-	for _, class := range *classes {
+	classes, err := s.GetAllClasses()
+	if err != nil{return err}
+	for _, class := range classes {
 		fmt.Print(class, "\n")
 	}
+	return nil
 }

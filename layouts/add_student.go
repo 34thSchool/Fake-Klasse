@@ -4,13 +4,15 @@ import (
 	"fake-klasse/state"
 	"fake-klasse/storage"
 	"fake-klasse/ui"
+	"log"
 	"strings"
 
 	"gioui.org/layout"
 	"gioui.org/widget"
+	"gioui.org/widget/material"
 )
 
-func Add_Student(state *state.State, s *storage.Storage) ui.Screen {
+func Add_Student(state *state.State, theme *material.Theme, s *storage.Storage) ui.Screen {
 
 	// Widget declaration:
 	var (
@@ -32,25 +34,30 @@ func Add_Student(state *state.State, s *storage.Storage) ui.Screen {
 	//Creating a widget.Clickable slice of all classes in DB
 	//classes := storage.Singleton.GetAllClasses()
 	var widgetList []widget.Clickable
-	for range *s.GetAllClasses() {
+	classes, err := s.GetAllClasses()
+	if err != nil {
+		log.Println("unable to get classes: ", err)
+		return nil
+	}
+	for range classes {
 		var widget widget.Clickable
 		widgetList = append(widgetList, widget)
 	}
 
 	//Widget drawing:
-	return func(graphicalContext layout.Context) (ui.Screen, func(graphicalContext layout.Context)) {
+	return func(gtx layout.Context) (ui.Screen, func(gtx layout.Context)) {
 
-		layout := func(graphicalContext layout.Context) {
+		layout := func(gtx layout.Context) {
 			// Drawing background:
-			ui.DrawBackground(graphicalContext.Ops, ui.BackgroundColor)
+			ui.DrawBackground(gtx.Ops, ui.BackgroundColor)
 			// Flexbox with Top alignment:
 			layout.Flex{
 				Axis:    layout.Vertical,
 				Spacing: layout.SpaceEnd, // Top
-			}.Layout(graphicalContext,
+			}.Layout(gtx,
 				// Title:
 				layout.Rigid(
-					ui.DrawTitle(state, 70, "Add Student", ui.TitleColor, ui.Margins{Right: 0, Left: 0, Top: 0, Bottom: 0}),
+					ui.DrawTitle(state, theme, 70, "Add Student", ui.TitleColor, ui.Margins{Right: 0, Left: 0, Top: 0, Bottom: 0}),
 				),
 			)
 
@@ -58,17 +65,17 @@ func Add_Student(state *state.State, s *storage.Storage) ui.Screen {
 			layout.Flex{
 				Axis:    layout.Horizontal,
 				Spacing: layout.SpaceAround,
-			}.Layout(graphicalContext,
-				layout.Flexed(1, ui.DrawInputWithMargins(state, &nameWidget, "Name", 25, ui.Margins{Right: 0, Left: 50, Top: 150, Bottom: 0})),
-				layout.Flexed(1, ui.DrawInputWithMargins(state, &surnameWidget, "Surname", 25, ui.Margins{Right: 50, Left: 25, Top: 150, Bottom: 0})),
+			}.Layout(gtx,
+				layout.Flexed(1, ui.DrawInputWithMargins(state, theme, &nameWidget, "Name", 25, ui.Margins{Right: 0, Left: 50, Top: 150, Bottom: 0})),
+				layout.Flexed(1, ui.DrawInputWithMargins(state, theme, &surnameWidget, "Surname", 25, ui.Margins{Right: 50, Left: 25, Top: 150, Bottom: 0})),
 			)
 
 			layout.Flex{
 				Axis:    layout.Vertical,
 				Spacing: layout.SpaceEnd, //space sides
-			}.Layout(graphicalContext,
+			}.Layout(gtx,
 				layout.Rigid(
-					ui.DrawButtonWithMargins(state, &classButton, classButtonText, 20, ui.Margins{Right: 175, Left: 175, Top: 230, Bottom: 0}, ui.ClassButtonColor),
+					ui.DrawButtonWithMargins(state, theme, &classButton, classButtonText, 20, ui.Margins{Right: 175, Left: 175, Top: 230, Bottom: 0}, ui.ClassButtonColor),
 				),
 			)
 
@@ -76,18 +83,18 @@ func Add_Student(state *state.State, s *storage.Storage) ui.Screen {
 			layout.Flex{
 				Axis:    layout.Vertical,
 				Spacing: layout.SpaceStart, // Bottom
-			}.Layout(graphicalContext,
+			}.Layout(gtx,
 
 				// Save button:
 				layout.Rigid(
 					ui.InputCheck(
-						ui.DrawButtonWithMargins(state, &saveButton, "Save", 15, ui.Margins{Right: 175, Left: 175, Top: 0, Bottom: 25}, ui.ButtonColor),
+						ui.DrawButtonWithMargins(state, theme, &saveButton, "Save", 15, ui.Margins{Right: 175, Left: 175, Top: 0, Bottom: 25}, ui.ButtonColor),
 						nameWidget, surnameWidget, /* selectedClass.Name,*/
 					),
 				),
 				// Close button:
 				layout.Rigid(
-					ui.DrawButtonWithMargins(state, &closeButton, "Close", 15, ui.Margins{Right: 200, Left: 200, Top: 0, Bottom: 35}, ui.ButtonColor),
+					ui.DrawButtonWithMargins(state, theme, &closeButton, "Close", 15, ui.Margins{Right: 200, Left: 200, Top: 0, Bottom: 35}, ui.ButtonColor),
 				),
 			)
 
@@ -95,9 +102,19 @@ func Add_Student(state *state.State, s *storage.Storage) ui.Screen {
 				layout.Flex{
 					Axis:    layout.Vertical,
 					Spacing: layout.SpaceEnd, //around evently sides
-				}.Layout(graphicalContext,
+				}.Layout(gtx,
 					layout.Rigid(
-						ui.DrawClassListWithMargins(state, graphicalContext, &widgetList, s.GetAllClasses(), &classList, ui.Margins{Right: 200, Left: 210, Top: 270, Bottom: 0}),
+						ui.DrawClassListWithMargins(state, gtx, theme, &widgetList, 
+							func ()[]storage.Class{
+								classes, err := s.GetAllClasses()
+								if err != nil {
+									log.Println("unable to get classes: ", err)
+									return nil
+								}
+								return classes
+							}(),
+							&classList, ui.Margins{Right: 200, Left: 210, Top: 270, Bottom: 0},
+						),
 					),
 				)
 			}
@@ -106,7 +123,7 @@ func Add_Student(state *state.State, s *storage.Storage) ui.Screen {
 
 		// Event handling:
 		if closeButton.Clicked() {
-			return Students(state, s), layout
+			return Students(state, theme, s), layout
 		}
 		if saveButton.Clicked() {
 			s.AddStudent(
@@ -114,7 +131,7 @@ func Add_Student(state *state.State, s *storage.Storage) ui.Screen {
 				strings.TrimSpace(surnameWidget.Text()),
 				selectedClass,
 			)
-			return Students(state, s), layout
+			return Students(state, theme, s), layout
 		}
 		if classButton.Clicked() {
 			if drawClassList {
@@ -126,7 +143,13 @@ func Add_Student(state *state.State, s *storage.Storage) ui.Screen {
 		for index := range widgetList {
 			if widgetList[index].Clicked() {
 				drawClassList = false
-				selectedClass = (*s.GetAllClasses())[index].Name //change the text of the classButton
+
+				classes, err = s.GetAllClasses()
+				if err != nil {
+					log.Println("unable to get classes: ", err)
+					return nil, layout
+				}
+				selectedClass = classes[index].Name //change the text of the classButton
 				classButtonText = selectedClass
 			}
 		}
