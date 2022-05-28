@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"image"
 	"image/color"
-	//"log"
+	"log"
 	"strings"
 
 	"gioui.org/layout"
@@ -16,7 +16,7 @@ import (
 	"gioui.org/unit"
 	"gioui.org/widget"
 	"gioui.org/widget/material"
-	//"gioui.org/x/component"
+	"gioui.org/x/component"
 
 	"fake-klasse/state"
 	"fake-klasse/storage"
@@ -238,72 +238,74 @@ func DrawClassListElement(state *state.State, gtx layout.Context, theme *materia
 }
 
 
-// // Menu:
-// func DrawClassesPopupWithMargins(theme *material.Theme, gtx layout.Context, s *storage.Storage, buttons []widget.Clickable, classes []storage.Class, m Margins) func(gtx layout.Context) layout.Dimensions {
-// 	return func(gtx layout.Context) layout.Dimensions {
-// 		margins := layout.Inset{
-// 			Top:    unit.Dp(m.Top),
-// 			Bottom: unit.Dp(m.Bottom),
-// 			Left:   unit.Dp(m.Left),
-// 			Right:  unit.Dp(m.Right),
-// 		}
-// 		return margins.Layout(gtx,
-// 			DrawClassesPopup(theme, gtx, s, buttons, classes),
-// 		)
-// 	}
-// }
-// func DrawClassesPopup(theme *material.Theme, gtx layout.Context, s *storage.Storage, buttons []widget.Clickable, classes []storage.Class) func(gtx layout.Context) layout.Dimensions {
+// Menu:
+func DrawClassesPopupWithMargins(theme *material.Theme, gtx layout.Context, s *storage.Storage, buttons []widget.Clickable, classes []storage.Class, m Margins) func(gtx layout.Context) layout.Dimensions {
+	return func(gtx layout.Context) layout.Dimensions {
+		margins := layout.Inset{
+			Top:    unit.Dp(m.Top),
+			Bottom: unit.Dp(m.Bottom),
+			Left:   unit.Dp(m.Left),
+			Right:  unit.Dp(m.Right),
+		}
+		return margins.Layout(gtx,
+			DrawClassesPopup(theme, gtx, s, buttons, classes),
+		)
+	}
+}
+func DrawClassesPopup(theme *material.Theme, gtx layout.Context, s *storage.Storage, buttons []widget.Clickable, classes []storage.Class) func(gtx layout.Context) layout.Dimensions {
 	
-// 	return func(gtx layout.Context) layout.Dimensions {
-// 		// Option list:
-// 		list := layout.List{
-// 			Axis: layout.Horizontal,
-// 			ScrollToEnd: false,
-// 			Alignment: layout.Middle,
-// 		}
+	return func(gtx layout.Context) layout.Dimensions {
+		// Option list:
+		list := layout.List{
+			Axis: layout.Vertical,
+			ScrollToEnd: false,
+			Alignment: layout.Middle,
+		}
 
-// 		// Options:
-// 		var items []func(gtx layout.Context) layout.Dimensions
+		// Options:
+		var items []func(gtx layout.Context) layout.Dimensions
 
 		
 
-// 		for index := range classes{
-// 			var button *widget.Clickable = &buttons[index]
-// 			items = append(items, ClassPopupElement(gtx, index, theme, s, button))
-// 		}
+		for index := range classes{
+			var button *widget.Clickable = &buttons[index]
+			items = append(items, ClassPopupElement(gtx, index, theme, s, button))
+		}
+		
+		menuState := component.MenuState{
+			OptionList: list,
+			Options: items,
+		}
+		
+		// margins := layout.Inset{
+		// 	Top: unit.Dp(0),
+		// 	Bottom: unit.Dp(0),
+		// 	Left: unit.Dp(100),
+		// 	Right: unit.Dp(0),
+		// }
+		
+		menuStyle := component.MenuStyle{&menuState, theme, layout.UniformInset(unit.Dp(0)), component.Surface(theme)}
+		menuStyle.Fg = color.NRGBA{255,255,255,255}
+		menuStyle.Bg = ButtonColor
+		menuStyle.ContrastBg = LightListColor
 
-
-// 		menuState := component.MenuState{
-// 			OptionList: list,
-// 			Options: items,
-// 		}
-
-// 		menu := component.Menu(theme, &menuState)
+		menuState.OptionList.Alignment = layout.Middle
+		//enu := component.Menu(theme, &menuState)
 		
 
-// 		return menu.Layout(gtx)
-// 	}
+		return menuStyle.Layout(gtx)
+	}
 	
-// }
+}
 
-// func ClassPopupElement(gtx layout.Context, index int, theme *material.Theme, s *storage.Storage, button *widget.Clickable) func(gtx layout.Context) layout.Dimensions{
-// 	// Getting classes:
-// 	classes, err := s.GetAllClasses()
-// 	if err != nil{log.Fatal("unable to get classes ", err)}
-// 	class := classes[index]
+func ClassPopupElement(gtx layout.Context, index int, theme *material.Theme, s *storage.Storage, button *widget.Clickable) func(gtx layout.Context) layout.Dimensions{
+	// Getting classes:
+	classes, err := s.GetAllClasses()
+	if err != nil{log.Fatal("unable to get classes ", err)}
+	class := classes[index]
 
-// 	// Coloring element:
-// 	if index % 2 == 0 {
-// 		theme.Bg = LightListColor
-// 	} else {
-// 		theme.Bg = DarkListColor
-// 	}
-// 	//style := material.ButtonStyle{Color: color.NRGBA{255,255,255,255}}
-	
-// 	//style.Layout(gtx)
+	item := component.MenuItem(theme, button, class.Name)
+	item.HoverColor = DarkListColor
 
-// 	item := component.MenuItem(theme, button, class.Name)
-// 	item.HoverColor = ButtonColor
-
-// 	return item.Layout
-// }
+	return item.Layout
+}

@@ -46,6 +46,7 @@ func mainLoop(window *app.Window) error {
 
 	theme :=  material.NewTheme(gofont.Collection())
 
+
 	currentLayout := layouts.MainMenu(&state, theme, &storage) // Declarating widgets and passing the drawing function as currentLayout. We're NOT drawing.
 	//currentLayout := layouts.Students(theme, &operations, &storage)
 
