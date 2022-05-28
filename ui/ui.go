@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"image"
 	"image/color"
+	//"log"
 	"strings"
 
 	"gioui.org/layout"
@@ -15,6 +16,7 @@ import (
 	"gioui.org/unit"
 	"gioui.org/widget"
 	"gioui.org/widget/material"
+	//"gioui.org/x/component"
 
 	"fake-klasse/state"
 	"fake-klasse/storage"
@@ -114,8 +116,36 @@ func DrawBackground(operations *op.Ops, c color.NRGBA) {
 	paint.Fill(operations, c) //op.Ops{} doesn't work
 }
 
+//Input:
+func DrawInput(state *state.State, theme *material.Theme, input *widget.Editor, hint string, textSize float32) func(gtx layout.Context) layout.Dimensions {
+
+	return func(gtx layout.Context) layout.Dimensions {
+		inputWidget := material.Editor(theme, input, hint)
+		input.SingleLine = true // Forces the box to always be one line high. Without it, the box will grow when user presses enter key.
+		//input.Focus()
+		inputWidget.TextSize = unit.Dp(textSize)
+		inputWidget.HintColor = HintColor
+		inputWidget.Color = TextColor
+		inputWidget.SelectionColor = LightListColor //very useful thing ._.
+		return inputWidget.Layout(gtx)
+	}
+}
+func DrawInputWithMargins(state *state.State, theme *material.Theme, input *widget.Editor, hint string, textSize float32, m Margins) func(gtx layout.Context) layout.Dimensions {
+	return func(gtx layout.Context) layout.Dimensions {
+		margins := layout.Inset{
+			Top:    unit.Dp(m.Top),
+			Bottom: unit.Dp(m.Bottom),
+			Left:   unit.Dp(m.Left),
+			Right:  unit.Dp(m.Right),
+		}
+		return margins.Layout(gtx,
+			DrawInput(state, theme, input, hint, textSize),
+		)
+	}
+}
+
 // Student list:
-func DrawStudentListWithMargins(state *state.State, theme *material.Theme, gtx layout.Context, buttons *[]widget.Clickable, students []storage.Student, list *widget.List, m Margins) func(gtx layout.Context) layout.Dimensions {
+func DrawStudentListWithMargins(state *state.State, theme *material.Theme, gtx layout.Context, buttons []widget.Clickable, students []storage.Student, list *widget.List, m Margins) func(gtx layout.Context) layout.Dimensions {
 
 	return func(gtx layout.Context) layout.Dimensions {
 		margins := layout.Inset{
@@ -129,12 +159,12 @@ func DrawStudentListWithMargins(state *state.State, theme *material.Theme, gtx l
 		)
 	}
 }
-func DrawStudentList(state *state.State, theme *material.Theme, gtx layout.Context, buttons *[]widget.Clickable, students []storage.Student, list *widget.List) func(gtx layout.Context) layout.Dimensions {
+func DrawStudentList(state *state.State, theme *material.Theme, gtx layout.Context, buttons []widget.Clickable, students []storage.Student, list *widget.List) func(gtx layout.Context) layout.Dimensions {
 
 	return func(gtx layout.Context) layout.Dimensions {
 
 		return material.List(theme, list).Layout(gtx, len(students), func(gtx layout.Context, index int) layout.Dimensions {
-			var button *widget.Clickable = &(*buttons)[index]
+			var button *widget.Clickable = &buttons[index]
 			return DrawStudentListElement(state, theme, gtx, button, students, index)
 		})
 	}
@@ -168,7 +198,7 @@ func DrawListWidget(gtx layout.Context, index int) func(gtx layout.Context) layo
 }
 
 // Class list:
-func DrawClassListWithMargins(state *state.State, gtx layout.Context, theme *material.Theme, buttons *[]widget.Clickable, classes []storage.Class, list *widget.List, m Margins) func(gtx layout.Context) layout.Dimensions {
+func DrawClassListWithMargins(state *state.State, gtx layout.Context, theme *material.Theme, buttons []widget.Clickable, classes []storage.Class, list *widget.List, m Margins) func(gtx layout.Context) layout.Dimensions {
 
 	return func(gtx layout.Context) layout.Dimensions {
 		margins := layout.Inset{
@@ -182,14 +212,15 @@ func DrawClassListWithMargins(state *state.State, gtx layout.Context, theme *mat
 		)
 	}
 }
-func DrawClassList(state *state.State, theme *material.Theme, gtx layout.Context, buttons *[]widget.Clickable, classes []storage.Class, list *widget.List) func(gtx layout.Context) layout.Dimensions {
+func DrawClassList(state *state.State, theme *material.Theme, gtx layout.Context, buttons []widget.Clickable, classes []storage.Class, list *widget.List) func(gtx layout.Context) layout.Dimensions {
 
 	return func(gtx layout.Context) layout.Dimensions {
-
-		return material.List(theme, list).Layout(gtx, len(classes), func(gtx layout.Context, index int) layout.Dimensions {
-			var button *widget.Clickable = &(*buttons)[index]
-			return DrawClassListElement(state, gtx, theme, button, classes, index)
-		})
+		return material.List(theme, list).Layout(gtx, len(classes), 
+			func(gtx layout.Context, index int) layout.Dimensions {
+				var button *widget.Clickable = &buttons[index]
+				return DrawClassListElement(state, gtx, theme, button, classes, index)
+			},
+		)
 	}
 }
 func DrawClassListElement(state *state.State, gtx layout.Context, theme *material.Theme, button *widget.Clickable, classes []storage.Class, index int) layout.Dimensions {
@@ -197,7 +228,7 @@ func DrawClassListElement(state *state.State, gtx layout.Context, theme *materia
 	class := (classes)[index]
 
 	var color color.NRGBA
-	if index%2 == 0 {
+	if index % 2 == 0 {
 		color = DarkListColor
 	} else {
 		color = LightListColor
@@ -206,28 +237,73 @@ func DrawClassListElement(state *state.State, gtx layout.Context, theme *materia
 	return DrawButton(state, theme, button, class.Name, 15, color)(gtx)
 }
 
-//Input:
-func DrawInput(state *state.State, theme *material.Theme, input *widget.Editor, hint string, textSize float32) func(gtx layout.Context) layout.Dimensions {
 
-	return func(gtx layout.Context) layout.Dimensions {
-		input := material.Editor(theme, input, hint)
-		input.TextSize = unit.Dp(textSize)
-		input.HintColor = HintColor
-		input.Color = TextColor
-		input.SelectionColor = LightListColor //very useful thing ._.
-		return input.Layout(gtx)
-	}
-}
-func DrawInputWithMargins(state *state.State, theme *material.Theme, input *widget.Editor, hint string, textSize float32, m Margins) func(gtx layout.Context) layout.Dimensions {
-	return func(gtx layout.Context) layout.Dimensions {
-		margins := layout.Inset{
-			Top:    unit.Dp(m.Top),
-			Bottom: unit.Dp(m.Bottom),
-			Left:   unit.Dp(m.Left),
-			Right:  unit.Dp(m.Right),
-		}
-		return margins.Layout(gtx,
-			DrawInput(state, theme, input, hint, textSize),
-		)
-	}
-}
+// // Menu:
+// func DrawClassesPopupWithMargins(theme *material.Theme, gtx layout.Context, s *storage.Storage, buttons []widget.Clickable, classes []storage.Class, m Margins) func(gtx layout.Context) layout.Dimensions {
+// 	return func(gtx layout.Context) layout.Dimensions {
+// 		margins := layout.Inset{
+// 			Top:    unit.Dp(m.Top),
+// 			Bottom: unit.Dp(m.Bottom),
+// 			Left:   unit.Dp(m.Left),
+// 			Right:  unit.Dp(m.Right),
+// 		}
+// 		return margins.Layout(gtx,
+// 			DrawClassesPopup(theme, gtx, s, buttons, classes),
+// 		)
+// 	}
+// }
+// func DrawClassesPopup(theme *material.Theme, gtx layout.Context, s *storage.Storage, buttons []widget.Clickable, classes []storage.Class) func(gtx layout.Context) layout.Dimensions {
+	
+// 	return func(gtx layout.Context) layout.Dimensions {
+// 		// Option list:
+// 		list := layout.List{
+// 			Axis: layout.Horizontal,
+// 			ScrollToEnd: false,
+// 			Alignment: layout.Middle,
+// 		}
+
+// 		// Options:
+// 		var items []func(gtx layout.Context) layout.Dimensions
+
+		
+
+// 		for index := range classes{
+// 			var button *widget.Clickable = &buttons[index]
+// 			items = append(items, ClassPopupElement(gtx, index, theme, s, button))
+// 		}
+
+
+// 		menuState := component.MenuState{
+// 			OptionList: list,
+// 			Options: items,
+// 		}
+
+// 		menu := component.Menu(theme, &menuState)
+		
+
+// 		return menu.Layout(gtx)
+// 	}
+	
+// }
+
+// func ClassPopupElement(gtx layout.Context, index int, theme *material.Theme, s *storage.Storage, button *widget.Clickable) func(gtx layout.Context) layout.Dimensions{
+// 	// Getting classes:
+// 	classes, err := s.GetAllClasses()
+// 	if err != nil{log.Fatal("unable to get classes ", err)}
+// 	class := classes[index]
+
+// 	// Coloring element:
+// 	if index % 2 == 0 {
+// 		theme.Bg = LightListColor
+// 	} else {
+// 		theme.Bg = DarkListColor
+// 	}
+// 	//style := material.ButtonStyle{Color: color.NRGBA{255,255,255,255}}
+	
+// 	//style.Layout(gtx)
+
+// 	item := component.MenuItem(theme, button, class.Name)
+// 	item.HoverColor = ButtonColor
+
+// 	return item.Layout
+// }

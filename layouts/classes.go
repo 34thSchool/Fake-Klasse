@@ -51,7 +51,7 @@ func Classes(state *state.State, theme *material.Theme, s *storage.Storage) ui.S
 				),
 				// List:
 				layout.Rigid(
-					ui.DrawClassListWithMargins(state, gtx, theme, &widgetList, 
+					ui.DrawClassListWithMargins(state, gtx, theme, widgetList, 
 						func ()[]storage.Class{
 							classes, err := s.GetAllClasses()
 							if err != nil {

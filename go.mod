@@ -4,6 +4,7 @@ go 1.18
 
 require (
 	gioui.org v0.0.0-20220517073035-79f037f983a7
+	gioui.org/x v0.0.0-20220527154558-1b330a12ccbe
 	github.com/jmoiron/sqlx v1.3.5
 	modernc.org/sqlite v1.17.2
 )

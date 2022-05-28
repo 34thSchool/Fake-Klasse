@@ -28,6 +28,8 @@ func Add_Student(state *state.State, theme *material.Theme, s *storage.Storage) 
 		saveButton  widget.Clickable
 		closeButton widget.Clickable
 	)
+	
+	nameWidget.Focus()// Places cursor in name field by default.
 
 	classButtonText = "Class" //for button to be with class text from the start
 
@@ -104,7 +106,7 @@ func Add_Student(state *state.State, theme *material.Theme, s *storage.Storage) 
 					Spacing: layout.SpaceEnd, //around evently sides
 				}.Layout(gtx,
 					layout.Rigid(
-						ui.DrawClassListWithMargins(state, gtx, theme, &widgetList, 
+						ui.DrawClassListWithMargins(state, gtx, theme, widgetList, 
 							func ()[]storage.Class{
 								classes, err := s.GetAllClasses()
 								if err != nil {
@@ -152,6 +154,9 @@ func Add_Student(state *state.State, theme *material.Theme, s *storage.Storage) 
 				selectedClass = classes[index].Name //change the text of the classButton
 				classButtonText = selectedClass
 			}
+		}
+		if nameWidget.Focused() || surnameWidget.Focused(){
+			drawClassList = false
 		}
 
 		return nil, layout

@@ -7,7 +7,15 @@ import (
 	"log"
 	"strings"
 
+	//"gioui.org/gesture"
+	//"gioui.org/key"
+	//"gioui.org/io/key"
+	//"gioui.org/io/pointer"
 	"gioui.org/layout"
+
+	//"gioui.org/op"
+	//"gioui.org/key"
+	//"gioui.org/event"
 	"gioui.org/widget"
 	"gioui.org/widget/material"
 )
@@ -28,6 +36,11 @@ func Edit_Student(state *state.State, theme *material.Theme, s *storage.Storage,
 		closeButton         widget.Clickable
 		deleteStudentButton widget.Clickable
 	)
+
+	nameWidget.Focus()// Places cursor in name field by default.
+
+	//var tag = new(bool) // We could use &pressed for this instead.
+	//var pressed = false
 
 	//students table
 	students,err := s.GetAllStudents()
@@ -123,7 +136,8 @@ func Edit_Student(state *state.State, theme *material.Theme, s *storage.Storage,
 					Spacing: layout.SpaceEnd, //around evently sides
 				}.Layout(gtx,
 					layout.Rigid(
-						ui.DrawClassListWithMargins(state, gtx, theme, &widgetList, classes, &classList, ui.Margins{Right: 200, Left: 210, Top: 270, Bottom: 0}),
+						ui.DrawClassListWithMargins(state, gtx, theme, widgetList, classes, &classList, ui.Margins{Right: 200, Left: 210, Top: 270, Bottom: 0}),
+						//ui.DrawClassesPopupWithMargins(theme, gtx, s, widgetList, classes, ui.Margins{Right: 200, Left: 210, Top: 270, Bottom: 0}),
 					),
 				)
 			}
@@ -135,12 +149,7 @@ func Edit_Student(state *state.State, theme *material.Theme, s *storage.Storage,
 			return returnLayout, layout
 		}
 		if saveButton.Clicked() {
-			// s.DeleteStudent((*students)[id].Rowid)
-			// s.AddStudent(
-			// 	ui.DataCheck((*students)[id].Name, strings.TrimSpace(nameWidget.Text())),
-			// 	ui.DataCheck((*students)[id].Surname, strings.TrimSpace(surnameWidget.Text())),
-			// 	ui.DataCheck((*students)[id].Class, selectedClass),
-			// )
+			
 			s.UpdateStudent(students[id], storage.Student{Name: strings.TrimSpace(nameWidget.Text()), Surname: strings.TrimSpace(surnameWidget.Text()), Class: selectedClass})
 
 			return returnLayout, layout
@@ -157,11 +166,17 @@ func Edit_Student(state *state.State, theme *material.Theme, s *storage.Storage,
 			}
 		}
 		for index := range widgetList {
+			// Whether or not any of classes are clicked:
 			if widgetList[index].Clicked() {
 				drawClassList = false
 				selectedClass = classes[index].Name //change the text of the classButton
 				classButtonText = selectedClass
 			}
+		}
+		// When we point in other place but our class list, we need class list to close.
+		// When we point in other place we select name or surname fields. Yah, some crutchy crutchezz.
+		if nameWidget.Focused() || surnameWidget.Focused(){
+			drawClassList = false
 		}
 
 		return nil, layout

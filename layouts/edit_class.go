@@ -23,6 +23,9 @@ func Edit_Class(state *state.State, theme *material.Theme, s *storage.Storage, i
 		closeButton       widget.Clickable
 		deleteClassButton widget.Clickable
 	)
+
+	classWidget.Focus()// Places cursor in class name field by default.
+
 	classes, err := s.GetAllClasses()
 	if err != nil{
 		log.Println("unable to get classes: ", err)

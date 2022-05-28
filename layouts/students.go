@@ -50,7 +50,7 @@ func Students(state *state.State, theme *material.Theme, s *storage.Storage) ui.
 				),
 				// List:
 				layout.Rigid(
-					ui.DrawStudentListWithMargins(state, theme, gtx, &widgetList, students, &list, ui.Margins{Right: 0, Left: 0, Top: 0, Bottom: 175}),
+					ui.DrawStudentListWithMargins(state, theme, gtx, widgetList, students, &list, ui.Margins{Right: 0, Left: 0, Top: 0, Bottom: 175}),
 				),
 			)
 

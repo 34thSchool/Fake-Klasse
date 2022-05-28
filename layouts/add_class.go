@@ -21,6 +21,8 @@ func Add_Class(state *state.State, theme *material.Theme, s *storage.Storage) ui
 		closeButton widget.Clickable
 	)
 
+	classWidget.Focus()// Places cursor in class name field by default.
+
 	//Widget drawing:
 	return func(gtx layout.Context) (ui.Screen, func(gtx layout.Context)) {
 

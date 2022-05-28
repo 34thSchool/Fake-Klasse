@@ -5,17 +5,19 @@ import (
 
 	"gioui.org/app" // Window handling.
 	"gioui.org/font/gofont"
+	//"gioui.org/io/key"
 	"gioui.org/io/system" // Events
-	"gioui.org/layout"    // Dimensions, constraints, directions, flexbox.
+	"gioui.org/layout" // Dimensions, constraints, directions, flexbox.
 	"gioui.org/op"
 	"gioui.org/unit" // implements device independent units and values. e.g. dp - device independent pixel, sp - scaled pixel - used for text sizes. and more.
 	"gioui.org/widget/material"
-
+	//"gioui.org/pointer"
 	//"gioui.org/widget"          // UI component state tracking and event handling: Is the mouse hovering over the button? Is button pressed, and how many times?
 
 	"fake-klasse/layouts"
 	"fake-klasse/state"
 	"fake-klasse/storage"
+	//"fake-klasse/ui"
 )
 
 func main() {
@@ -31,6 +33,7 @@ func main() {
 		os.Exit(0)
 	}()
 	app.Main()
+
 }
 
 func mainLoop(window *app.Window) error {
@@ -57,7 +60,6 @@ func mainLoop(window *app.Window) error {
 				currentLayout = nextLayout
 			}
 			drawLayout(gtx)
-
 			// Checking whether or not we should quit:
 			if state.ShouldQuit {
 				window.Perform(system.ActionClose)
